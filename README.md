@@ -84,6 +84,8 @@ cp .env.example .env
 k6 run tests/functional/sign-up.js
 ```
 
+**📚 For detailed information on running tests, see [Running Tests Guide](docs/RUNNING-TESTS-GUIDE.md)**
+
 ## 🔧 Configuration
 
 ### Environment Variables
@@ -317,6 +319,14 @@ export const options = {
 5. Add JSDoc comments to functions
 
 ## 📚 Resources
+
+### Project Documentation
+
+- [Running Tests Guide](docs/RUNNING-TESTS-GUIDE.md) - Complete guide on how to run tests
+- [Test Profiles Guide](docs/TEST-PROFILES-GUIDE.md) - How to configure test parameters
+- [Configuration Decision](docs/CONFIGURATION-DECISION.md) - Architecture decisions
+
+### External Resources
 
 - [K6 Documentation](https://k6.io/docs/)
 - [K6 JavaScript API](https://k6.io/docs/javascript-api/)

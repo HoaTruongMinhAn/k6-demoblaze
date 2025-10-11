@@ -3,6 +3,9 @@
 ###############################################################################
 # Smoke Test Runner
 # Runs quick validation tests to ensure system is functioning
+#
+# Note: Test configuration (VUs, duration, thresholds) is loaded from
+#       src/config/test-profiles.js by the test file.
 ###############################################################################
 
 set -e
@@ -10,10 +13,10 @@ set -e
 echo "======================================"
 echo "Running Smoke Tests"
 echo "======================================"
-
-# Set environment variables
-export ENVIRONMENT="${ENVIRONMENT:-sit}"
-export BASE_URL="${BASE_URL:-https://api.demoblaze.com}"
+echo ""
+echo "Note: Tests use configuration from src/config/test-profiles.js"
+echo "      Edit that file to change VUs, duration, or thresholds."
+echo "======================================"
 
 # Create reports directory if it doesn't exist
 mkdir -p reports

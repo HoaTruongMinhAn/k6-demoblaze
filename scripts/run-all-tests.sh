@@ -3,12 +3,19 @@
 ###############################################################################
 # Complete Test Suite Runner
 # Runs all tests in sequence: smoke -> functional
+#
+# Note: Test configuration (VUs, duration, thresholds) is loaded from
+#       src/config/test-profiles.js by each test file.
+#       Edit that file to change test parameters.
 ###############################################################################
 
 set -e
 
 echo "=========================================="
 echo "K6 Test Suite - Full Execution"
+echo "=========================================="
+echo ""
+echo "Configuration: src/config/test-profiles.js"
 echo "=========================================="
 echo ""
 
