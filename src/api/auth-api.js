@@ -1,6 +1,11 @@
 import http from "k6/http";
-import { configManager } from "../../ConfigManager.js";
-import { CONSTANTS } from "../../constant.js";
+import { configManager } from "../config/config-manager.js";
+import { CONSTANTS } from "../config/constants.js";
+
+/**
+ * Authentication API Module
+ * Handles all authentication-related API calls
+ */
 
 /**
  * Sign up a new user

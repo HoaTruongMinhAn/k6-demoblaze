@@ -1,19 +1,36 @@
 import { check, sleep } from "k6";
-import { configManager } from "../ConfigManager.js";
-import { CONSTANTS } from "../constant.js";
-import { signUp } from "../modules/api/auth-api.js";
+import { configManager } from "../../src/config/config-manager.js";
+import { CONSTANTS } from "../../src/config/constants.js";
+import { signUp } from "../../src/api/auth-api.js";
+import { getTestProfile } from "../../src/config/test-profiles.js";
 import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
 
+/**
+ * Functional Test: User Sign Up
+ * Tests the user registration workflow
+ *
+ * Test Steps:
+ * 1. Generate unique user credentials
+ * 2. Send sign-up request
+ * 3. Validate successful registration
+ */
+
+// Load functional test profile from test-profiles configuration
+const functionalProfile = getTestProfile("functional");
 const testOptions = configManager.getTestOptions();
 
 export const options = {
-  vus: testOptions.vus,
-  duration: testOptions.duration,
+  vus: functionalProfile.vus,
+  duration: functionalProfile.duration,
   thresholds: testOptions.thresholds,
+  tags: {
+    test_type: "functional",
+    feature: "authentication",
+  },
 };
 
 export default function () {
-  // Think time before action
+  // Think time before action (simulating user behavior)
   sleep(randomIntBetween(0, 2));
 
   // Generate unique user credentials
@@ -34,6 +51,6 @@ export default function () {
     "response body is empty string": (r) => r.body.trim() === '""',
   });
 
-  // Think time after action
+  // Think time after action (simulating user behavior)
   sleep(randomIntBetween(1, 3));
 }

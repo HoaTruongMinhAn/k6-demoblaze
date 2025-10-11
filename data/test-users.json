@@ -1,0 +1,25 @@
+{
+    "description": "Test user data for various test scenarios",
+    "users": {
+        "valid": [
+            {
+                "username": "test_user_001",
+                "password": "MTIzNDU2",
+                "email": "test001@example.com"
+            },
+            {
+                "username": "test_user_002",
+                "password": "MTIzNDU2",
+                "email": "test002@example.com"
+            }
+        ],
+        "admin": [
+            {
+                "username": "admin_user",
+                "password": "YWRtaW4xMjM=",
+                "email": "admin@example.com"
+            }
+        ]
+    },
+    "note": "These are sample data structures. Actual test data should be generated dynamically."
+}
