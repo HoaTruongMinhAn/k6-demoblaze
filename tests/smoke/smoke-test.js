@@ -24,11 +24,7 @@ const smokeProfile = getTestProfile("smoke");
 export const options = {
   vus: smokeProfile.vus,
   duration: smokeProfile.duration,
-  thresholds: {
-    http_req_duration: ["p(95)<1000"],
-    http_req_failed: ["rate<0.05"],
-    checks: ["rate>0.95"],
-  },
+  thresholds: smokeProfile.thresholds,
   tags: {
     test_type: "smoke",
     feature: "system_health",

@@ -17,12 +17,11 @@ import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
 
 // Load functional test profile from test-profiles configuration
 const functionalProfile = getTestProfile("functional");
-const testOptions = configManager.getTestOptions();
 
 export const options = {
   vus: functionalProfile.vus,
   duration: functionalProfile.duration,
-  thresholds: testOptions.thresholds,
+  thresholds: functionalProfile.thresholds,
   tags: {
     test_type: "functional",
     feature: "authentication",
