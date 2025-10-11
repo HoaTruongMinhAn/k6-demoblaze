@@ -1,3 +1,5 @@
+import { randomString } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
+
 export class ConfigManager {
   constructor() {
     this.config = {
@@ -5,8 +7,13 @@ export class ConfigManager {
       PROJECT_NAME: "k6-demoblaze",
       BASE_URL: __ENV.BASE_URL || "https://api.demoblaze.com",
       API_TIMEOUT: __ENV.API_TIMEOUT || "30s",
-      VUS: __ENV.VUS || 1,
+      VUS: __ENV.VUS || 2,
       DURATION: __ENV.DURATION || "5s",
+      THRESHOLDS: __ENV.THRESHOLDS || {
+        http_req_duration: ["p(95)<1500", "p(99)<1700", "max<2000"],
+        http_req_failed: ["rate<0.01"],
+        checks: ["rate>0.95"],
+      },
       ENVIRONMENT: __ENV.ENVIRONMENT || "sit",
       END_POINTS: {
         SIGN_UP: "/signup",
@@ -57,8 +64,14 @@ export class ConfigManager {
       vus: this.config.VUS,
       duration: this.config.DURATION,
       timeout: this.config.API_TIMEOUT,
-      // thresholds: this.config.test.thresholds,
-      username: this.config.USERNAME_PREFIX + Date.now(),
+      thresholds: this.config.THRESHOLDS,
+    };
+  }
+
+  generateUserInfo() {
+    return {
+      username:
+        this.config.USERNAME_PREFIX + randomString(8) + "_" + Date.now(),
       password: this.config.PASSWORD,
     };
   }
