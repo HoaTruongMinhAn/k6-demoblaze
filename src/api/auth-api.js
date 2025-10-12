@@ -14,7 +14,7 @@ import { CONSTANTS } from "../config/constants.js";
  * @returns {Response} HTTP response object
  */
 export function signUp(username, password) {
-  const url = configManager.getUrl("SIGN_UP");
+  const url = configManager.getApiUrl("SIGN_UP");
   const payload = JSON.stringify({
     username: username,
     password: password,
@@ -36,7 +36,7 @@ export function signUp(username, password) {
  * @returns {Response} HTTP response object
  */
 export function login(username, password) {
-  const url = configManager.getUrl("LOGIN");
+  const url = configManager.getApiUrl("LOGIN");
   const payload = JSON.stringify({
     username: username,
     password: password,

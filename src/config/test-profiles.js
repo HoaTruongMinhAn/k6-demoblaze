@@ -23,7 +23,8 @@ export const TEST_PROFILES = {
   /** Quick validation - Minimal load to verify system is functional */
   smoke: {
     vus: 1,
-    duration: "5s",
+    iterations: 1,
+    // duration: "5s",
     thresholds: {
       http_req_duration: ["p(95)<1000"], // 95% of requests under 1s
       http_req_failed: ["rate<0.05"], // Less than 5% errors

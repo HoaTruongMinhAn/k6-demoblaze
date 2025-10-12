@@ -4,6 +4,7 @@ import { configManager } from "../../src/config/config-manager.js";
 import { CONSTANTS } from "../../src/config/constants.js";
 import { getTestProfile } from "../../src/config/test-profiles.js";
 import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
+import { login } from "../../src/api/auth-api.js";
 
 /**
  * Smoke Test - Validates basic system functionality
@@ -23,7 +24,7 @@ const smokeProfile = getTestProfile("smoke");
 
 export const options = {
   vus: smokeProfile.vus,
-  duration: smokeProfile.duration,
+  iterations: smokeProfile.iterations,
   thresholds: smokeProfile.thresholds,
   tags: {
     test_type: "smoke",
@@ -32,26 +33,37 @@ export const options = {
 };
 
 export function setup() {
-  // Validate configuration before running tests
   configManager.validate();
-  configManager.log();
+  configManager.logProfile(smokeProfile);
 }
 
 export default function () {
   console.log("=== Starting Smoke Test ===");
 
-  // Test: Verify main page loads successfully
-  const response = http.get("https://www.demoblaze.com/index.html");
-  console.log(`Homepage response status: ${response.status}`);
+  const landingUrl = configManager.getWebUrl("LANDING");
+  console.log(`Landing URL: ${landingUrl}`);
 
-  // Validate response
-  const checksPass = check(response, {
+  // Test: Verify main page loads successfully
+  const response = http.get(landingUrl);
+
+  const checkLandingPass = check(response, {
     "homepage loads (status 200)": (r) => r.status === CONSTANTS.HTTP_STATUS.OK,
     "homepage contains product store": (r) => r.body.includes("PRODUCT STORE"),
     "response time < 2s": (r) => r.timings.duration < 2000,
   });
 
-  if (checksPass) {
+  // Test: Verify login works successfully
+  const userInfo = configManager.generateUserInfo();
+  const loginResponse = login("tangoE", "MTIzNDU2");
+
+  const checkLoginPass = check(loginResponse, {
+    "login successful (status 200)": (r) =>
+      r.status === CONSTANTS.HTTP_STATUS.OK,
+    "login response has Auth_token property": (r) => r.body.Auth_token !== null,
+    "response time < 2s": (r) => r.timings.duration < 2000,
+  });
+
+  if (checkLandingPass && checkLoginPass) {
     console.log("✅ Smoke test passed");
   } else {
     console.log("❌ Smoke test failed");

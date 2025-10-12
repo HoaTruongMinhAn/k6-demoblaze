@@ -7,22 +7,45 @@ import { randomString } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
  */
 export class ConfigManager {
   constructor() {
+    // Environment-specific API URLs
+    const apiUrls = {
+      sit: "https://api.demoblaze.com",
+      uat: "https://api.uat.demoblaze.com",
+      prod: "https://api.prod.demoblaze.com",
+    };
+
+    // Environment-specific web URLs
+    const webUrls = {
+      sit: "https://demoblaze.com",
+      uat: "https://uat.demoblaze.com",
+      prod: "https://prod.demoblaze.com",
+    };
+
+    const environment = __ENV.ENVIRONMENT || "sit";
+    const baseApiUrl = __ENV.BASE_URL || apiUrls[environment] || apiUrls.sit;
+    const baseWebUrl = __ENV.WEB_URL || webUrls[environment] || webUrls.sit;
+
     this.config = {
       PROJECT_ID: 999,
       PROJECT_NAME: "k6-demoblaze",
-      BASE_URL: __ENV.BASE_URL || "https://api.demoblaze.com",
+      BASE_API_URL: baseApiUrl,
+      BASE_WEB_URL: baseWebUrl,
       API_TIMEOUT: __ENV.API_TIMEOUT || "30s",
       VUS: __ENV.VUS || 2,
       DURATION: __ENV.DURATION || "5s",
+      ITERATIONS: __ENV.ITERATIONS || 1,
       THRESHOLDS: __ENV.THRESHOLDS || {
         http_req_duration: ["p(95)<500", "p(99)<1000", "max<2000"],
         http_req_failed: ["rate<0.01"],
         checks: ["rate>0.95"],
       },
-      ENVIRONMENT: __ENV.ENVIRONMENT || "sit",
-      ENDPOINTS: {
+      ENVIRONMENT: environment,
+      API_ENDPOINTS: {
         SIGN_UP: "/signup",
         LOGIN: "/login",
+      },
+      WEB_ENDPOINTS: {
+        LANDING: "/",
       },
       USERNAME_PREFIX: __ENV.USERNAME_PREFIX || "tango_",
       PASSWORD: __ENV.PASSWORD || "MTIzNDU2", // raw value: 123456
@@ -62,8 +85,10 @@ export class ConfigManager {
       id: this.config.PROJECT_ID,
       name: this.config.PROJECT_NAME,
       environment: this.config.ENVIRONMENT,
-      baseUrl: this.config.BASE_URL,
-      endpoints: this.config.ENDPOINTS,
+      baseApiUrl: this.config.BASE_API_URL,
+      baseWebUrl: this.config.BASE_WEB_URL,
+      apiEndpoints: this.config.API_ENDPOINTS,
+      webEndpoints: this.config.WEB_ENDPOINTS,
     };
   }
 
@@ -72,9 +97,22 @@ export class ConfigManager {
    * @param {string} endpoint - Endpoint name (e.g., "SIGN_UP")
    * @returns {string} Full URL
    */
-  getUrl(endpoint) {
+  getApiUrl(endpoint) {
     return (
-      this.getProjectInfo().baseUrl + this.getProjectInfo().endpoints[endpoint]
+      this.getProjectInfo().baseApiUrl +
+      this.getProjectInfo().apiEndpoints[endpoint]
+    );
+  }
+
+  /**
+   * Get full URL for a specific endpoint
+   * @param {string} endpoint - Endpoint name (e.g., "LANDING")
+   * @returns {string} Full URL
+   */
+  getWebUrl(endpoint) {
+    return (
+      this.getProjectInfo().baseWebUrl +
+      this.getProjectInfo().webEndpoints[endpoint]
     );
   }
 
@@ -85,6 +123,7 @@ export class ConfigManager {
   getTestOptions() {
     return {
       vus: this.config.VUS,
+      iterations: this.config.ITERATIONS,
       duration: this.config.DURATION,
       timeout: this.config.API_TIMEOUT,
       thresholds: this.config.THRESHOLDS,
@@ -109,7 +148,7 @@ export class ConfigManager {
    * @returns {boolean} True if validation passes
    */
   validate() {
-    const required = ["PROJECT_ID", "BASE_URL"];
+    const required = ["PROJECT_ID", "BASE_API_URL", "BASE_WEB_URL"];
     const missing = required.filter((key) => !this.config[key]);
 
     if (missing.length > 0) {
@@ -132,9 +171,19 @@ export class ConfigManager {
         ")"
     );
     console.log("Environment: " + this.getProjectInfo().environment);
-    console.log("Base URL: " + this.getProjectInfo().baseUrl);
+    console.log("Base API URL: " + this.getProjectInfo().baseApiUrl);
+    console.log("Base Web URL: " + this.getProjectInfo().baseWebUrl);
     console.log("VUs: " + this.getTestOptions().vus);
+    console.log("Iterations: " + this.getTestOptions().iterations);
     console.log("Duration: " + this.getTestOptions().duration);
+  }
+
+  logProfile(profile) {
+    console.log("=== Profile ===");
+    console.log(`VUs: ${profile.vus}`);
+    console.log(`Iterations: ${profile.iterations}`);
+    console.log(`Duration: ${profile.duration}`);
+    console.log(`Thresholds: ${JSON.stringify(profile.thresholds)}`);
   }
 }
 

@@ -92,25 +92,88 @@ k6 run tests/functional/sign-up.js
 
 Configure tests via environment variables or `.env` file:
 
-| Variable          | Description                           | Default                     |
-| ----------------- | ------------------------------------- | --------------------------- |
-| `ENVIRONMENT`     | Target environment (dev/sit/uat/prod) | `sit`                       |
-| `BASE_URL`        | API base URL                          | `https://api.demoblaze.com` |
-| `API_TIMEOUT`     | Request timeout                       | `30s`                       |
-| `VUS`             | Number of virtual users               | `2`                         |
-| `DURATION`        | Test duration                         | `30s`                       |
-| `USERNAME_PREFIX` | Username prefix for test users        | `tango_`                    |
-| `PASSWORD`        | Base64 encoded password               | `MTIzNDU2`                  |
+| Variable          | Description                              | Default                     |
+| ----------------- | ---------------------------------------- | --------------------------- |
+| `ENVIRONMENT`     | Target environment (sit/uat/prod)        | `sit`                       |
+| `BASE_URL`        | API base URL (auto-set from ENVIRONMENT) | `https://api.demoblaze.com` |
+| `WEB_URL`         | Web URL (auto-set from ENVIRONMENT)      | `https://demoblaze.com`     |
+| `API_TIMEOUT`     | Request timeout                          | `30s`                       |
+| `VUS`             | Number of virtual users                  | `2`                         |
+| `DURATION`        | Test duration                            | `30s`                       |
+| `USERNAME_PREFIX` | Username prefix for test users           | `tango_`                    |
+| `PASSWORD`        | Base64 encoded password                  | `MTIzNDU2`                  |
+
+### Environment-Specific URLs
+
+The project automatically maps environments to their corresponding URLs:
+
+**API URLs (`apiUrls` - for API requests):**
+
+| Environment | API BASE_URL                     |
+| ----------- | -------------------------------- |
+| `sit`       | `https://api.demoblaze.com`      |
+| `uat`       | `https://api.uat.demoblaze.com`  |
+| `prod`      | `https://api.prod.demoblaze.com` |
+
+**Web URLs (`webUrls` - for frontend/browser requests):**
+
+| Environment | WEB_URL                      |
+| ----------- | ---------------------------- |
+| `sit`       | `https://demoblaze.com`      |
+| `uat`       | `https://uat.demoblaze.com`  |
+| `prod`      | `https://prod.demoblaze.com` |
 
 ### Example Usage
 
 ```bash
-# Run with custom configuration
-ENVIRONMENT=uat VUS=10 DURATION=5m ./scripts/run-functional-tests.sh
+# Run on default (SIT) environment
+# API: https://api.demoblaze.com
+# Web: https://demoblaze.com
+./scripts/run-smoke-tests.sh
 
-# Run with specific base URL
-BASE_URL=https://api-dev.demoblaze.com k6 run tests/smoke/smoke-test.js
+# Run on UAT environment
+# API: https://api.uat.demoblaze.com
+# Web: https://uat.demoblaze.com
+ENVIRONMENT=uat ./scripts/run-functional-tests.sh
+
+# Run on Production environment
+# API: https://api.prod.demoblaze.com
+# Web: https://prod.demoblaze.com
+ENVIRONMENT=prod VUS=10 DURATION=5m ./scripts/run-all-tests.sh
+
+# Override with custom URLs (bypasses environment mapping)
+BASE_URL=https://api-dev.demoblaze.com \
+WEB_URL=https://dev.demoblaze.com \
+k6 run tests/smoke/smoke-test.js
 ```
+
+### Using API vs Web URLs in Tests
+
+**When to use `configManager.getUrl()` (API URLs):**
+
+- ✅ Making API requests (signup, login, etc.)
+- ✅ Testing backend endpoints
+- ✅ REST API calls
+
+**When to use `configManager.getWebUrl()` (Web URLs):**
+
+- ✅ Testing frontend/web pages
+- ✅ Browser-based tests
+- ✅ HTML page checks
+
+**Example:**
+
+```javascript
+// For API calls (uses apiUrls)
+const signupUrl = configManager.getUrl("SIGN_UP");
+// → https://api.demoblaze.com/signup
+
+// For web pages (uses webUrls)
+const homepageUrl = configManager.getWebUrl();
+// → https://demoblaze.com
+```
+
+---
 
 ## 📊 Test Types
 
@@ -171,7 +234,11 @@ Centralized configuration management:
 ```javascript
 import { configManager } from "../../src/config/config-manager.js";
 
-const url = configManager.getUrl("SIGN_UP");
+// Get API endpoint URL
+const apiUrl = configManager.getUrl("SIGN_UP");
+
+// Get web URL
+const webUrl = configManager.getWebUrl();
 ```
 
 #### Utilities (`src/utils/`)

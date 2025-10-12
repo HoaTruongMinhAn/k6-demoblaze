@@ -152,11 +152,16 @@ k6 run tests/functional/sign-up.js
 # Custom VUs and duration
 k6 run --vus 10 --duration 30s tests/smoke/smoke-test.js
 
-# With environment variables
-ENVIRONMENT=uat k6 run tests/smoke/smoke-test.js
+# Run against different environments (BASE_URL auto-selected)
+ENVIRONMENT=sit k6 run tests/smoke/smoke-test.js    # https://api.demoblaze.com (default)
+ENVIRONMENT=uat k6 run tests/smoke/smoke-test.js    # https://api.uat.demoblaze.com
+ENVIRONMENT=prod k6 run tests/smoke/smoke-test.js   # https://api.prod.demoblaze.com
+
+# Manual BASE_URL override (bypasses environment mapping)
+BASE_URL=https://api-dev.demoblaze.com k6 run tests/smoke/smoke-test.js
 
 # Multiple overrides
-BASE_URL=https://api-dev.demoblaze.com \
+ENVIRONMENT=uat \
 VUS=5 \
 DURATION=1m \
 k6 run tests/functional/sign-up.js
@@ -308,21 +313,87 @@ k6 run tests/smoke/smoke-test.js
 
 ## 🔧 **Advanced Usage**
 
-### **Custom Environment**
+### **Running Tests Across Different Environments**
+
+The project supports three environments with automatic URL mapping:
+
+**API URLs (apiUrls):**
+
+| Environment | BASE_URL                         | Usage                                |
+| ----------- | -------------------------------- | ------------------------------------ |
+| **sit**     | `https://api.demoblaze.com`      | Default (System Integration Testing) |
+| **uat**     | `https://api.uat.demoblaze.com`  | User Acceptance Testing              |
+| **prod**    | `https://api.prod.demoblaze.com` | Production                           |
+
+**Web URLs (webUrls):**
+
+| Environment | WEB_URL                      | Usage                                |
+| ----------- | ---------------------------- | ------------------------------------ |
+| **sit**     | `https://demoblaze.com`      | Default (System Integration Testing) |
+| **uat**     | `https://uat.demoblaze.com`  | User Acceptance Testing              |
+| **prod**    | `https://prod.demoblaze.com` | Production                           |
+
+#### **Using Shell Scripts**
 
 ```bash
-# Set environment
-export ENVIRONMENT=uat
-export BASE_URL=https://api-uat.demoblaze.com
-
-# Run test
+# SIT (default - no environment needed)
 ./scripts/run-smoke-tests.sh
+
+# UAT
+ENVIRONMENT=uat ./scripts/run-smoke-tests.sh
+
+# Production
+ENVIRONMENT=prod ./scripts/run-functional-tests.sh
+
+# Run all tests on UAT
+ENVIRONMENT=uat ./scripts/run-all-tests.sh
 ```
 
-Or inline:
+#### **Using Direct K6 Commands**
 
 ```bash
-ENVIRONMENT=uat BASE_URL=https://api-uat.demoblaze.com ./scripts/run-smoke-tests.sh
+# SIT (default)
+k6 run tests/smoke/smoke-test.js
+
+# UAT
+ENVIRONMENT=uat k6 run tests/smoke/smoke-test.js
+
+# Production
+ENVIRONMENT=prod k6 run tests/functional/sign-up.js
+```
+
+#### **Manual URL Override**
+
+If you need to test against custom URLs (bypassing environment mapping):
+
+```bash
+# Custom API URL only
+BASE_URL=https://api-dev.demoblaze.com ./scripts/run-smoke-tests.sh
+
+# Custom web URL only
+WEB_URL=https://dev.demoblaze.com k6 run tests/smoke/smoke-test.js
+
+# Custom both API and web URLs
+BASE_URL=https://api-staging.demoblaze.com \
+WEB_URL=https://staging.demoblaze.com \
+k6 run tests/smoke/smoke-test.js
+```
+
+#### **Persistent Environment Variables**
+
+For multiple test runs on the same environment:
+
+```bash
+# Set environment once
+export ENVIRONMENT=uat
+
+# Run multiple tests
+./scripts/run-smoke-tests.sh
+./scripts/run-functional-tests.sh
+k6 run tests/smoke/smoke-test.js
+
+# Unset when done
+unset ENVIRONMENT
 ```
 
 ### **Parallel Execution**
@@ -401,17 +472,19 @@ rm -rf reports/*
 
 ### **Common Commands**
 
-| Task                          | Command                                           |
-| ----------------------------- | ------------------------------------------------- |
-| Run smoke test (with reports) | `./scripts/run-smoke-tests.sh`                    |
-| Run smoke test (quick)        | `k6 run tests/smoke/smoke-test.js`                |
-| Run functional tests          | `./scripts/run-functional-tests.sh`               |
-| Run all tests                 | `./scripts/run-all-tests.sh`                      |
-| Clean reports                 | `./scripts/clean-reports.sh`                      |
-| Override VUs                  | `k6 run --vus 10 tests/smoke/smoke-test.js`       |
-| Override duration             | `k6 run --duration 30s tests/smoke/smoke-test.js` |
-| Set environment               | `ENVIRONMENT=uat ./scripts/run-smoke-tests.sh`    |
-| Check exit code               | `./scripts/run-smoke-tests.sh; echo $?`           |
+| Task                          | Command                                                    |
+| ----------------------------- | ---------------------------------------------------------- |
+| Run smoke test (with reports) | `./scripts/run-smoke-tests.sh`                             |
+| Run smoke test (quick)        | `k6 run tests/smoke/smoke-test.js`                         |
+| Run functional tests          | `./scripts/run-functional-tests.sh`                        |
+| Run all tests                 | `./scripts/run-all-tests.sh`                               |
+| Clean reports                 | `./scripts/clean-reports.sh`                               |
+| Override VUs                  | `k6 run --vus 10 tests/smoke/smoke-test.js`                |
+| Override duration             | `k6 run --duration 30s tests/smoke/smoke-test.js`          |
+| Run on UAT environment        | `ENVIRONMENT=uat ./scripts/run-smoke-tests.sh`             |
+| Run on PROD environment       | `ENVIRONMENT=prod ./scripts/run-smoke-tests.sh`            |
+| Custom BASE_URL               | `BASE_URL=https://custom.url ./scripts/run-smoke-tests.sh` |
+| Check exit code               | `./scripts/run-smoke-tests.sh; echo $?`                    |
 
 ### **Project Structure**
 
@@ -561,8 +634,19 @@ curl https://www.demoblaze.com/index.html
 2. Are environment variables set correctly?
 
 ```bash
-echo $ENVIRONMENT
-echo $BASE_URL
+echo $ENVIRONMENT  # Should be: sit, uat, or prod
+
+# URLs are auto-determined from ENVIRONMENT:
+
+# API URLs (apiUrls):
+# sit  → https://api.demoblaze.com
+# uat  → https://api.uat.demoblaze.com
+# prod → https://api.prod.demoblaze.com
+
+# Web URLs (webUrls):
+# sit  → https://demoblaze.com
+# uat  → https://uat.demoblaze.com
+# prod → https://prod.demoblaze.com
 ```
 
 3. Are thresholds too strict?
