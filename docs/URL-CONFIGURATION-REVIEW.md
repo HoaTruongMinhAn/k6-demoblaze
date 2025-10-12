@@ -14,7 +14,7 @@
 - `src/config/config-manager.js` - **UPDATED**
 - `src/api/auth-api.js` - No changes needed
 - `tests/smoke/smoke-test.js` - No changes needed
-- `tests/functional/sign-up.js` - No changes needed
+- `tests/functional/signup.js` - No changes needed
 
 ✅ **Documentation Files**
 

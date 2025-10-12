@@ -102,7 +102,7 @@ export const TEST_PROFILES = {
 k6 run tests/smoke/smoke-test.js
 
 # Runs with functional profile (2 VUs, 5s)
-k6 run tests/functional/sign-up.js
+k6 run tests/functional/signup.js
 ```
 
 ### **Override Profile at Runtime**

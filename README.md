@@ -8,7 +8,7 @@ Enterprise-grade performance testing framework for [Demoblaze](https://www.demob
 k6-demoblaze/
 ├── tests/                      # Test scenarios
 │   ├── functional/            # Functional test scenarios
-│   │   └── sign-up.js        # User registration test
+│   │   └── signup.js         # User registration test
 │   └── smoke/                 # Smoke test scenarios
 │       └── smoke-test.js     # Basic health check
 ├── src/                       # Source code and modules
@@ -81,7 +81,7 @@ cp .env.example .env
 #### Run Specific Test
 
 ```bash
-k6 run tests/functional/sign-up.js
+k6 run tests/functional/signup.js
 ```
 
 **📚 For detailed information on running tests, see [Running Tests Guide](docs/RUNNING-TESTS-GUIDE.md)**

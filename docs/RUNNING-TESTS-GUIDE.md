@@ -33,7 +33,7 @@ Located in `scripts/` directory:
 Located in `tests/` directory:
 
 - `tests/smoke/smoke-test.js`
-- `tests/functional/sign-up.js`
+- `tests/functional/signup.js`
 
 **What they do:**
 
@@ -143,7 +143,7 @@ Removes all generated test reports.
 k6 run tests/smoke/smoke-test.js
 
 # Functional test
-k6 run tests/functional/sign-up.js
+k6 run tests/functional/signup.js
 ```
 
 ### **Override Parameters**
@@ -164,7 +164,7 @@ BASE_URL=https://api-dev.demoblaze.com k6 run tests/smoke/smoke-test.js
 ENVIRONMENT=uat \
 VUS=5 \
 DURATION=1m \
-k6 run tests/functional/sign-up.js
+k6 run tests/functional/signup.js
 ```
 
 ### **With Output Options**
@@ -359,7 +359,7 @@ k6 run tests/smoke/smoke-test.js
 ENVIRONMENT=uat k6 run tests/smoke/smoke-test.js
 
 # Production
-ENVIRONMENT=prod k6 run tests/functional/sign-up.js
+ENVIRONMENT=prod k6 run tests/functional/signup.js
 ```
 
 #### **Manual URL Override**
@@ -401,7 +401,7 @@ unset ENVIRONMENT
 ```bash
 # Run tests in parallel (separate terminals or background)
 k6 run tests/smoke/smoke-test.js &
-k6 run tests/functional/sign-up.js &
+k6 run tests/functional/signup.js &
 wait  # Wait for all to complete
 ```
 
@@ -432,8 +432,8 @@ When you run shell scripts, reports are saved in `reports/`:
 reports/
 ├── smoke-test-results.json      # Detailed metrics
 ├── smoke-test-summary.json      # Test summary
-├── sign-up-results.json         # Functional test results
-└── sign-up-summary.json         # Functional test summary
+├── signup-results.json          # Functional test results
+└── signup-summary.json          # Functional test summary
 ```
 
 ### **Viewing Reports**
@@ -492,7 +492,7 @@ rm -rf reports/*
 k6-demoblaze/
 ├── tests/                    # K6 test files (.js)
 │   ├── functional/
-│   │   └── sign-up.js       # Run: k6 run tests/functional/sign-up.js
+│   │   └── signup.js        # Run: k6 run tests/functional/signup.js
 │   └── smoke/
 │       └── smoke-test.js    # Run: k6 run tests/smoke/smoke-test.js
 │

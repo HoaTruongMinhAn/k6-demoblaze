@@ -259,7 +259,7 @@ k6 run tests/smoke/smoke-test.js
 # ✅ PASSED: 3 iterations, 100% checks passed
 
 # Functional test
-k6 run tests/functional/sign-up.js
+k6 run tests/functional/signup.js
 # ✅ PASSED: 5 iterations, 100% checks passed
 ```
 

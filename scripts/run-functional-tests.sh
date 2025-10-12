@@ -4,6 +4,11 @@
 # Functional Test Runner
 # Runs all functional tests with their configured profiles
 #
+# Available Tests:
+#   - signup.js         : User registration test
+#   - login.js          : User login test
+#   - signup-login.js   : Complete authentication flow (signup + login)
+#
 # Note: Test configuration (VUs, duration, thresholds) is loaded from
 #       src/config/test-profiles.js by each test file.
 ###############################################################################
@@ -14,6 +19,19 @@ echo "======================================"
 echo "Running Functional Tests"
 echo "======================================"
 echo ""
+
+# Discover and count tests
+test_files=(tests/functional/*.js)
+total_tests=${#test_files[@]}
+
+# Display discovered tests
+echo "Discovered Tests: $total_tests"
+for test_file in "${test_files[@]}"; do
+  test_name=$(basename "$test_file" .js)
+  echo "  • $test_name.js"
+done
+
+echo ""
 echo "Note: Tests use configuration from src/config/test-profiles.js"
 echo "      Edit that file to change VUs, duration, or thresholds."
 echo "======================================"
@@ -21,11 +39,14 @@ echo "======================================"
 # Create reports directory
 mkdir -p reports
 
+current_test=0
+
 # Run functional tests
 for test_file in tests/functional/*.js; do
+  current_test=$((current_test + 1))
   test_name=$(basename "$test_file" .js)
   echo ""
-  echo "Running: $test_name"
+  echo "[$current_test/$total_tests] Running: $test_name"
   echo "--------------------------------------"
   
   k6 run \

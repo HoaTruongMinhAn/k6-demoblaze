@@ -27,7 +27,7 @@ k6-demoblaze/
 k6-demoblaze/
 ├── tests/                     # Organized by test type
 │   ├── functional/
-│   │   └── sign-up.js        # kebab-case, focused test
+│   │   └── signup.js         # kebab-case, focused test
 │   └── smoke/
 │       └── smoke-test.js     # kebab-case, focused test
 ├── src/                       # Source code organization
@@ -111,7 +111,7 @@ k6-demoblaze/
 - `src/config/config-manager.js` - Enhanced config manager
 - `src/config/constants.js` - Expanded constants
 - `src/utils/helpers.js` - Utility functions
-- `tests/functional/sign-up.js` - Refactored functional test
+- `tests/functional/signup.js` - Refactored functional test
 - `tests/smoke/smoke-test.js` - Refactored smoke test
 - `data/test-users.json` - Test data samples
 - `data/test-config.json` - Environment configurations
@@ -144,7 +144,7 @@ k6-demoblaze/
 ./scripts/run-all-tests.sh
 
 # Run specific test
-k6 run tests/functional/sign-up.js
+k6 run tests/functional/signup.js
 ```
 
 ### **Configure Environment**
@@ -173,7 +173,7 @@ ls -lh reports/
 
 All tests have been verified and are working correctly:
 
-### **Functional Test (sign-up.js)**
+### **Functional Test (signup.js)**
 
 - ✅ Successfully creates new users
 - ✅ Validates API responses
