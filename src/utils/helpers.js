@@ -8,6 +8,9 @@ import {
  * Common helper functions used across test scenarios
  */
 
+// Import test users data
+const testUsersData = JSON.parse(open("../../data/test-users.json"));
+
 /**
  * Generate a random wait time and sleep
  * @param {number} min - Minimum seconds to wait
@@ -70,4 +73,31 @@ export function logTestExecution(testName, details) {
  */
 export function createErrorMessage(context, response) {
   return `[${context}] Failed with status ${response.status}: ${response.body}`;
+}
+
+/**
+ * Get an existing user from test data
+ * @param {string} category - User category (e.g., 'customer', 'admin')
+ * @param {number|null} index - Specific user index (0-based), or null for random selection
+ * @returns {Object} User object with username and password
+ */
+export function getExistingUser(category = "customer", index = null) {
+  const users = testUsersData.users[category];
+
+  if (!users || users.length === 0) {
+    throw new Error(`No users found in category: ${category}`);
+  }
+
+  // If index is provided, use it; otherwise pick randomly
+  const userIndex =
+    index !== null ? index : randomIntBetween(0, users.length - 1);
+  const user = users[userIndex];
+
+  if (!user) {
+    throw new Error(
+      `User not found at index ${userIndex} in category: ${category}`
+    );
+  }
+
+  return user;
 }

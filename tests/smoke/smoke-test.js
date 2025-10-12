@@ -5,6 +5,7 @@ import { CONSTANTS } from "../../src/config/constants.js";
 import { getTestProfile } from "../../src/config/test-profiles.js";
 import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
 import { login } from "../../src/api/auth-api.js";
+import { getExistingUser } from "../../src/utils/helpers.js";
 
 /**
  * Smoke Test - Validates basic system functionality
@@ -53,8 +54,8 @@ export default function () {
   });
 
   // Test: Verify login works successfully
-  const userInfo = configManager.generateUserInfo();
-  const loginResponse = login("tangoE", "MTIzNDU2");
+  const userInfo = getExistingUser("customer");
+  const loginResponse = login(userInfo.username, userInfo.password);
 
   const checkLoginPass = check(loginResponse, {
     "login successful (status 200)": (r) =>
