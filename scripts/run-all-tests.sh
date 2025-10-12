@@ -20,9 +20,24 @@ echo "K6 Test Suite - Full Execution"
 echo "=========================================="
 echo ""
 
-# Discover tests
+# Discover smoke tests
 smoke_tests=(tests/smoke/*.js)
-functional_tests=(tests/functional/*.js)
+
+# Define functional test execution order (must match run-functional-tests.sh)
+functional_test_order=(
+  "signup.js"
+  "login.js"
+  "signup-login.js"
+)
+
+# Build functional test paths
+functional_tests=()
+for test_name in "${functional_test_order[@]}"; do
+  test_path="tests/functional/$test_name"
+  if [ -f "$test_path" ]; then
+    functional_tests+=("$test_path")
+  fi
+done
 
 echo "Test Suite:"
 echo ""
@@ -33,7 +48,7 @@ for test_file in "${smoke_tests[@]}"; do
 done
 
 echo ""
-echo "  Functional Tests: ${#functional_tests[@]}"
+echo "  Functional Tests: ${#functional_tests[@]} (in execution order)"
 for test_file in "${functional_tests[@]}"; do
   test_name=$(basename "$test_file" .js)
   echo "    • $test_name.js"

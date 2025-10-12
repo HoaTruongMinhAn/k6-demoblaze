@@ -17,7 +17,6 @@ import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
  * 5. Validate successful login
  */
 
-// Load functional test profile from test-profiles configuration
 const functionalProfile = getTestProfile("functional");
 
 export const options = {
@@ -32,9 +31,7 @@ export const options = {
 
 export default function () {
   sleep(randomIntBetween(0, 2));
-
   const userInfo = configManager.generateUserInfo();
-
   let response = signUp(userInfo.username, userInfo.password);
 
   check(response, {
@@ -44,7 +41,6 @@ export default function () {
   });
 
   sleep(randomIntBetween(1, 3));
-
   response = login(userInfo.username, userInfo.password);
 
   check(response, {

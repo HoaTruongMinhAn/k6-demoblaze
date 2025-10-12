@@ -20,12 +20,27 @@ echo "Running Functional Tests"
 echo "======================================"
 echo ""
 
-# Discover and count tests
-test_files=(tests/functional/*.js)
+# Define test execution order
+test_order=(
+  "signup.js"
+  "login.js"
+  "signup-login.js"
+)
+
+# Build full paths and count tests
+test_files=()
+for test_name in "${test_order[@]}"; do
+  test_path="tests/functional/$test_name"
+  if [ -f "$test_path" ]; then
+    test_files+=("$test_path")
+  else
+    echo "⚠️  Warning: $test_name not found, skipping..."
+  fi
+done
 total_tests=${#test_files[@]}
 
-# Display discovered tests
-echo "Discovered Tests: $total_tests"
+# Display discovered tests in order
+echo "Discovered Tests: $total_tests (in execution order)"
 for test_file in "${test_files[@]}"; do
   test_name=$(basename "$test_file" .js)
   echo "  • $test_name.js"
@@ -41,8 +56,8 @@ mkdir -p reports
 
 current_test=0
 
-# Run functional tests
-for test_file in tests/functional/*.js; do
+# Run functional tests in defined order
+for test_file in "${test_files[@]}"; do
   current_test=$((current_test + 1))
   test_name=$(basename "$test_file" .js)
   echo ""
