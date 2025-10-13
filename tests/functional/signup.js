@@ -1,9 +1,7 @@
-import { check, sleep } from "k6";
 import { configManager } from "../../src/config/config-manager.js";
-import { CONSTANTS } from "../../src/config/constants.js";
-import { signUp } from "../../src/api/auth-api.js";
+import { signUpAndValidate } from "../../src/api/auth-api.js";
 import { getTestProfile } from "../../src/config/test-profiles.js";
-import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
+import { preActionDelay, betweenActionDelay } from "../../src/utils/timing.js";
 
 /**
  * Functional Test: User Sign Up
@@ -28,15 +26,8 @@ export const options = {
 };
 
 export default function () {
-  sleep(randomIntBetween(0, 2));
+  preActionDelay();
   const user = configManager.generateUserInfo("customer");
-  const response = signUp(user);
-
-  check(response, {
-    "sign-up successful (status 200)": (r) =>
-      r.status === CONSTANTS.HTTP_STATUS.OK,
-    "response body is empty string": (r) => r.body.trim() === '""',
-  });
-
-  sleep(randomIntBetween(1, 3));
+  signUpAndValidate(user);
+  betweenActionDelay();
 }

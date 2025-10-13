@@ -1,11 +1,11 @@
 import http from "k6/http";
-import { check, sleep } from "k6";
+import { check } from "k6";
 import { configManager } from "../../src/config/config-manager.js";
 import { CONSTANTS } from "../../src/config/constants.js";
 import { getTestProfile } from "../../src/config/test-profiles.js";
-import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
-import { login } from "../../src/api/auth-api.js";
+import { loginAndValidate } from "../../src/api/auth-api.js";
 import { getExistingUser } from "../../src/utils/test-data.js";
+import { betweenActionDelay } from "../../src/utils/timing.js";
 
 /**
  * Smoke Test - Validates basic system functionality
@@ -55,14 +55,13 @@ export default function () {
 
   // Test: Verify login works successfully
   const user = getExistingUser("customer");
-  const loginResponse = login(user);
+  const loginResult = loginAndValidate(user);
 
-  const checkLoginPass = check(loginResponse, {
-    "login successful (status 200)": (r) =>
-      r.status === CONSTANTS.HTTP_STATUS.OK,
-    "login response has Auth_token property": (r) => r.body.Auth_token !== null,
-    "response time < 2s": (r) => r.timings.duration < 2000,
-  });
+  // Additional response time check for smoke test
+  const checkLoginPass =
+    check(loginResult.response, {
+      "response time < 2s": (r) => r.timings.duration < 2000,
+    }) && loginResult.validationPassed;
 
   if (checkLandingPass && checkLoginPass) {
     console.log("✅ Smoke test passed");
@@ -70,7 +69,7 @@ export default function () {
     console.log("❌ Smoke test failed");
   }
 
-  sleep(randomIntBetween(1, 3));
+  betweenActionDelay();
 }
 
 export function teardown(data) {

@@ -1,10 +1,8 @@
-import { check, sleep } from "k6";
 import { configManager } from "../../src/config/config-manager.js";
-import { CONSTANTS } from "../../src/config/constants.js";
-import { login } from "../../src/api/auth-api.js";
+import { loginAndValidate } from "../../src/api/auth-api.js";
 import { getTestProfile } from "../../src/config/test-profiles.js";
 import { getExistingUser } from "../../src/utils/test-data.js";
-import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
+import { preActionDelay, betweenActionDelay } from "../../src/utils/timing.js";
 
 /**
  * Functional Test: User Login
@@ -31,15 +29,8 @@ export const options = {
 };
 
 export default function () {
-  sleep(randomIntBetween(0, 2));
+  preActionDelay();
   const user = getExistingUser("customer");
-  const response = login(user);
-
-  check(response, {
-    "login successful (status 200)": (r) =>
-      r.status === CONSTANTS.HTTP_STATUS.OK,
-    "login response has Auth_token property": (r) => r.body.Auth_token !== null,
-  });
-
-  sleep(randomIntBetween(1, 3));
+  loginAndValidate(user);
+  betweenActionDelay();
 }
