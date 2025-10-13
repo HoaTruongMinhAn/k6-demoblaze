@@ -2,10 +2,7 @@ import { configManager } from "../../src/config/config-manager.js";
 import { signUpAndValidate, loginAndValidate } from "../../src/api/auth-api.js";
 import { getTestProfile } from "../../src/config/test-profiles.js";
 import { preActionDelay, betweenActionDelay } from "../../src/utils/timing.js";
-import {
-  addToCartAndValidate,
-  getExistingProduct,
-} from "../../src/api/product-api.js";
+import { addRandomProductsToCartAndValidate } from "../../src/api/product-api.js";
 
 const functionalProfile = getTestProfile("functional");
 
@@ -24,17 +21,9 @@ export default function () {
   const user = configManager.generateUserInfo("customer");
   signUpAndValidate(user);
 
-  const res = loginAndValidate(user);
-  const token = res.response.body
-    .split("Auth_token: ")[1]
-    .trim()
-    .replace(/\\"/g, "")
-    .replace(/\n/g, "")
-    .replace(/"$/, "");
-  console.log("Token: " + token);
+  const loginResponse = loginAndValidate(user);
+  const cartResult = addRandomProductsToCartAndValidate(loginResponse);
+  console.log(`Added ${cartResult.totalProducts} products to cart`);
 
-  const product = getExistingProduct();
-  addToCartAndValidate(product, token);
-  console.log("Product: " + product.name);
   betweenActionDelay();
 }

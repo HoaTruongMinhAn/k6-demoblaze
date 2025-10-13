@@ -56,6 +56,97 @@ export function addToCartAndValidate(product, token, options = {}) {
 }
 
 /**
+ * Add random products to cart with validation
+ * @param {Object} loginResponse - Login response object with response property
+ * @param {Object} options - Validation options
+ * @param {boolean} options.validateResponse - Whether to validate response (default: true)
+ * @param {string} options.testName - Test name for validation (default: "addToCart")
+ * @param {number} options.minProducts - Minimum number of products to add (default: 1)
+ * @param {number} options.maxProducts - Maximum number of products to add (default: 3)
+ * @param {number|null} options.specificProductIndex - Specific product index, or null for random (default: null)
+ * @returns {Object} Object with response and validation results
+ */
+export function addRandomProductsToCartAndValidate(
+  loginResponse,
+  options = {}
+) {
+  const {
+    validateResponse = true,
+    testName = "addToCart",
+    minProducts = 1,
+    maxProducts = 3,
+    specificProductIndex = null,
+  } = options;
+
+  // Parse token from login response
+  const token = loginResponse.response.body
+    .split("Auth_token: ")[1]
+    .trim()
+    .replace(/\\"/g, "")
+    .replace(/\n/g, "")
+    .replace(/"$/, "");
+
+  // Determine number of products to add
+  const numProducts = randomIntBetween(minProducts, maxProducts);
+
+  // Get all available products
+  const allProducts = getAllProducts();
+
+  // Select random products (avoid duplicates if possible)
+  const selectedProducts = [];
+  const usedIndices = new Set();
+
+  for (let i = 0; i < numProducts; i++) {
+    let productIndex;
+
+    if (specificProductIndex !== null) {
+      // Use specific product if specified
+      productIndex = specificProductIndex;
+    } else {
+      // Select random product (avoid duplicates if we have more products than needed)
+      do {
+        productIndex = randomIntBetween(0, allProducts.length - 1);
+      } while (
+        usedIndices.has(productIndex) &&
+        usedIndices.size < allProducts.length
+      );
+
+      usedIndices.add(productIndex);
+    }
+
+    selectedProducts.push(allProducts[productIndex]);
+  }
+
+  // Add each product to cart and collect results
+  const results = [];
+  let allValidationsPassed = true;
+
+  for (let i = 0; i < selectedProducts.length; i++) {
+    const product = selectedProducts[i];
+    const result = addToCartAndValidate(product, token, {
+      validateResponse,
+      testName: `${testName}_${i + 1}`,
+    });
+
+    results.push({
+      product: product.name,
+      result: result,
+    });
+
+    if (validateResponse && result.validationPassed === false) {
+      allValidationsPassed = false;
+    }
+  }
+
+  return {
+    results,
+    totalProducts: selectedProducts.length,
+    allValidationsPassed,
+    token,
+  };
+}
+
+/**
  * Get an existing product from test data
  * @param {number|null} index - Specific product index (0-based), or null for random selection
  * @returns {Product} Product instance
