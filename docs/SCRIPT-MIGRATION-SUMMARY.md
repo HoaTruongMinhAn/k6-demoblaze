@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `run-mix-tests.sh` script has been **enhanced and replaced** with `run-distribution-tests.sh` to provide dynamic distribution profiles and better functionality.
+The `run-mix-tests.sh` script has been **deleted** and replaced with `run-distribution-tests.sh` to provide dynamic distribution profiles and better functionality.
 
 ## What Changed
 
@@ -24,13 +24,13 @@ The `run-mix-tests.sh` script has been **enhanced and replaced** with `run-distr
 
 ```bash
 # Run with default settings
-./scripts/run-mix-tests.sh
+./scripts/run-distribution-tests.sh
 
 # Run with custom parameters
-VUS=20 DURATION=60s ./scripts/run-mix-tests.sh
+VUS=20 DURATION=60s ./scripts/run-distribution-tests.sh
 
 # Run different test file
-TEST_FILE=basic ./scripts/run-mix-tests.sh
+TEST_FILE=basic ./scripts/run-distribution-tests.sh
 ```
 
 #### **New Usage:**
@@ -130,14 +130,14 @@ ENVIRONMENT=uat VUS=20 DURATION=60s OUTPUT_DIR=custom-reports ./scripts/run-dist
    - Updated test descriptions
 
 4. **`run-mix-tests.sh`**
-   - Added deprecation notice
-   - Still functional but marked for removal
+   - **DELETED** - No longer available
+   - All functionality moved to `run-distribution-tests.sh`
 
 ## Migration Steps
 
 ### 🔄 **For Users**
 
-1. **Update scripts**: Replace `run-mix-tests.sh` with `run-distribution-tests.sh`
+1. **Use new script**: Use `run-distribution-tests.sh` for all mix scenario testing
 2. **Update CI/CD**: Update pipeline scripts to use new command
 3. **Update documentation**: Update any internal docs referencing old script
 4. **Test new profiles**: Try different distribution profiles for your use cases
@@ -164,11 +164,11 @@ ENVIRONMENT=uat VUS=20 DURATION=60s OUTPUT_DIR=custom-reports ./scripts/run-dist
 - **Scalable** - Easy to add new scenarios as features grow
 - **Maintainable** - Centralized configuration management
 
-## Deprecation Timeline
+## Migration Status
 
-- **Phase 1** (Current): `run-mix-tests.sh` marked as deprecated but functional
-- **Phase 2** (Future): `run-mix-tests.sh` will be removed
-- **Phase 3** (Future): All references updated to new script
+- **Phase 1** ✅ **COMPLETED**: `run-mix-tests.sh` marked as deprecated
+- **Phase 2** ✅ **COMPLETED**: `run-mix-tests.sh` **DELETED**
+- **Phase 3** ✅ **COMPLETED**: All references updated to new script
 
 ## Support
 
