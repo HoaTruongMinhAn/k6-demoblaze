@@ -10,13 +10,11 @@ export class User {
    * @param {string} username - The username
    * @param {string} password - The password
    * @param {string} category - User category (e.g., 'customer', 'admin')
-   * @param {Object} metadata - Additional user metadata
    */
-  constructor(username, password, category = "customer", metadata = {}) {
+  constructor(username, password, category = "customer") {
     this._username = this._validateUsername(username);
     this._password = this._validatePassword(password);
     this._category = this._validateCategory(category);
-    this._metadata = { ...metadata };
     this._createdAt = new Date().toISOString();
     this._isActive = true;
   }
@@ -32,10 +30,6 @@ export class User {
 
   get category() {
     return this._category;
-  }
-
-  get metadata() {
-    return { ...this._metadata };
   }
 
   get createdAt() {
@@ -132,7 +126,6 @@ export class User {
       username: this._username,
       password: this._password,
       category: this._category,
-      metadata: this._metadata,
       createdAt: this._createdAt,
       isActive: this._isActive,
     };
@@ -164,14 +157,6 @@ export class User {
   }
 
   /**
-   * Update user metadata
-   * @param {Object} newMetadata - New metadata to merge
-   */
-  updateMetadata(newMetadata) {
-    this._metadata = { ...this._metadata, ...newMetadata };
-  }
-
-  /**
    * Deactivate user
    */
   deactivate() {
@@ -199,13 +184,8 @@ export class User {
    * @returns {User} New User instance
    */
   static fromObject(userData) {
-    const {
-      username,
-      password,
-      category = "customer",
-      metadata = {},
-    } = userData;
-    return new User(username, password, category, metadata);
+    const { username, password, category = "customer" } = userData;
+    return new User(username, password, category);
   }
 
   /**

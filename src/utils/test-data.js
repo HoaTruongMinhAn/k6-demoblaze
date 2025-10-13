@@ -10,7 +10,7 @@ import { User } from "../models/User.js";
  */
 
 // Import test users data
-const testUsersData = JSON.parse(open("../../data/test-users.json"));
+const testUsersData = JSON.parse(open("../../data/user.json"));
 
 /**
  * Generate random test data

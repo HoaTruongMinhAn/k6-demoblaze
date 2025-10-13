@@ -44,6 +44,7 @@ export class ConfigManager {
       API_ENDPOINTS: {
         SIGN_UP: "/signup",
         LOGIN: "/login",
+        ADD_TO_CART: "/addtocart",
       },
       WEB_ENDPOINTS: {
         LANDING: "/",
