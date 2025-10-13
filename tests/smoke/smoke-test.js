@@ -54,8 +54,8 @@ export default function () {
   });
 
   // Test: Verify login works successfully
-  const userInfo = getExistingUser("customer");
-  const loginResponse = login(userInfo.username, userInfo.password);
+  const user = getExistingUser("customer");
+  const loginResponse = login(user);
 
   const checkLoginPass = check(loginResponse, {
     "login successful (status 200)": (r) =>

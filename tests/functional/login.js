@@ -32,8 +32,8 @@ export const options = {
 
 export default function () {
   sleep(randomIntBetween(0, 2));
-  const userInfo = getExistingUser("customer");
-  const response = login(userInfo.username, userInfo.password);
+  const user = getExistingUser("customer");
+  const response = login(user);
 
   check(response, {
     "login successful (status 200)": (r) =>

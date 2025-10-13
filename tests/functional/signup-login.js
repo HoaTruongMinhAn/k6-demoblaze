@@ -31,8 +31,8 @@ export const options = {
 
 export default function () {
   sleep(randomIntBetween(0, 2));
-  const userInfo = configManager.generateUserInfo();
-  let response = signUp(userInfo.username, userInfo.password);
+  const user = configManager.generateUserInfo("customer");
+  let response = signUp(user);
 
   check(response, {
     "sign-up successful (status 200)": (r) =>
@@ -41,7 +41,7 @@ export default function () {
   });
 
   sleep(randomIntBetween(1, 3));
-  response = login(userInfo.username, userInfo.password);
+  response = login(user);
 
   check(response, {
     "login successful (status 200)": (r) =>

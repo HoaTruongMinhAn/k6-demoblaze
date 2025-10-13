@@ -1,4 +1,5 @@
 import { randomString } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
+import { User } from "../models/User.js";
 
 /**
  * Configuration Manager
@@ -132,14 +133,25 @@ export class ConfigManager {
 
   /**
    * Generate unique user information for testing
+   * @param {string} category - User category (e.g., 'customer', 'admin')
+   * @returns {User} User instance with username and password
+   */
+  generateUserInfo(category = "customer") {
+    const username =
+      this.config.USERNAME_PREFIX + randomString(8) + "_" + Date.now();
+    const password = this.config.PASSWORD;
+
+    return new User(username, password, category);
+  }
+
+  /**
+   * Generate unique user information as plain object (for backward compatibility)
+   * @param {string} category - User category (e.g., 'customer', 'admin')
    * @returns {Object} User object with username and password
    */
-  generateUserInfo() {
-    return {
-      username:
-        this.config.USERNAME_PREFIX + randomString(8) + "_" + Date.now(),
-      password: this.config.PASSWORD,
-    };
+  generateUserInfoObject(category = "customer") {
+    const user = this.generateUserInfo(category);
+    return user.toObject();
   }
 
   /**

@@ -29,8 +29,8 @@ export const options = {
 
 export default function () {
   sleep(randomIntBetween(0, 2));
-  const userInfo = configManager.generateUserInfo();
-  const response = signUp(userInfo.username, userInfo.password);
+  const user = configManager.generateUserInfo("customer");
+  const response = signUp(user);
 
   check(response, {
     "sign-up successful (status 200)": (r) =>
