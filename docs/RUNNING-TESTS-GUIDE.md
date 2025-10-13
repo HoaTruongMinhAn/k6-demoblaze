@@ -12,6 +12,7 @@ Located in `scripts/` directory:
 
 - `run-smoke-tests.sh`
 - `run-functional-tests.sh`
+- `run-distribution-tests.sh` ⭐ (Enhanced mix tests with dynamic profiles)
 - `run-all-tests.sh`
 - `clean-reports.sh`
 
@@ -34,6 +35,7 @@ Located in `tests/` directory:
 
 - `tests/smoke/smoke-test.js`
 - `tests/functional/signup.js`
+- `tests/mix/mix-scenario-weighted.js`
 
 **What they do:**
 
@@ -45,6 +47,7 @@ Located in `tests/` directory:
 
 ```bash
 k6 run tests/smoke/smoke-test.js
+k6 run tests/mix/mix-scenario-weighted.js
 ```
 
 ---
@@ -89,6 +92,83 @@ Running Smoke Tests
 - ✅ Generates reports for each test
 - ✅ Stops on first failure
 - ✅ Shows summary at end
+
+### **Run Mix Scenario Tests (Enhanced)**
+
+```bash
+./scripts/run-distribution-tests.sh
+```
+
+**What it does:**
+
+- ✅ Runs realistic user behavior simulation with **dynamic distribution profiles**
+- ✅ **5 pre-configured profiles**: auth_basic, ecommerce, high_conversion, browse_heavy, load_test
+- ✅ Generates detailed reports with JSON output
+- ✅ Shows comprehensive summary with jq
+- ✅ Supports multiple test file types
+- ✅ Environment variable configuration
+
+**Available distribution profiles:**
+
+```bash
+# Run all profiles
+./scripts/run-distribution-tests.sh
+
+# Run specific profile
+./scripts/run-distribution-tests.sh ecommerce
+./scripts/run-distribution-tests.sh high_conversion
+
+# Different test approaches
+TEST_FILE=basic ./scripts/run-distribution-tests.sh auth_basic
+TEST_FILE=advanced ./scripts/run-distribution-tests.sh ecommerce
+
+# With custom parameters
+VUS=20 DURATION=60s ./scripts/run-distribution-tests.sh
+ENVIRONMENT=uat OUTPUT_DIR=custom-reports ./scripts/run-distribution-tests.sh
+```
+
+**Distribution Profiles Explained:**
+
+- **`auth_basic`**: Basic authentication flow (20% signup, 20% login, 60% signup+login)
+- **`ecommerce`**: E-commerce focused with shopping behaviors
+- **`high_conversion`**: Optimized for purchase completion
+- **`browse_heavy`**: Users mostly browsing
+- **`load_test`**: Equal distribution for stress testing
+
+**Mix Scenario Approaches Explained:**
+
+- **`weighted` (default)**: Uses `constant-vus` executor - K6 expert's recommended approach
+- **`basic`**: Simple approach with `constant-vus` executor - good for learning
+- **`advanced`**: Uses ramping patterns with different user behaviors - production load testing
+- **`shared-iterations`**: Educational approach using `shared-iterations` executor
+
+**Example output:**
+
+```
+=== Mix Scenario Test Runner ===
+Environment: sit
+Output Directory: reports
+Test File: weighted
+Using: Weighted Distribution (Recommended)
+
+=== Test Summary ===
+{
+  "Total Requests": 16,
+  "Failed Requests": 0,
+  "Average Response Time (ms)": 277,
+  "90th Percentile (ms)": 298,
+  "95th Percentile (ms)": 308,
+  "Max Response Time (ms)": 326,
+  "Checks Pass Rate (%)": 100,
+  "Total Iterations": 8,
+  "Max VUs": 5
+}
+
+=== Mix Scenario Distribution ===
+20% Signup Only (new users who abandon)
+20% Login Only (returning users)
+60% Signup + Login (new users completing flow)
+```
 
 ### **Run All Tests**
 
@@ -144,6 +224,14 @@ k6 run tests/smoke/smoke-test.js
 
 # Functional test
 k6 run tests/functional/signup.js
+
+# Mix scenario test (recommended approach)
+k6 run tests/mix/mix-scenario-weighted.js
+
+# Other mix scenario approaches
+k6 run tests/mix/mix-scenario.js
+k6 run tests/mix/mix-scenario-advanced.js
+k6 run tests/mix/mix-scenario-shared-iterations.js
 ```
 
 ### **Override Parameters**
@@ -197,15 +285,15 @@ k6 run --tag env=production --tag region=us tests/smoke/smoke-test.js
 
 ## 📊 **Comparison: Scripts vs Direct K6**
 
-| Feature              | Shell Scripts                  | Direct K6                          |
-| -------------------- | ------------------------------ | ---------------------------------- |
-| **Command**          | `./scripts/run-smoke-tests.sh` | `k6 run tests/smoke/smoke-test.js` |
-| **Reports**          | ✅ Auto-generated              | ❌ Manual (add flags)              |
-| **Exit Codes**       | ✅ Formatted output            | ✅ Raw output                      |
-| **Speed**            | Slightly slower                | ⚡ Faster                          |
-| **Best For**         | CI/CD, Production              | Development, Debug                 |
-| **Output**           | Clean, formatted               | K6 native output                   |
-| **Reports Location** | `reports/`                     | Custom or none                     |
+| Feature              | Shell Scripts                         | Direct K6                                   |
+| -------------------- | ------------------------------------- | ------------------------------------------- |
+| **Command**          | `./scripts/run-distribution-tests.sh` | `k6 run tests/mix/mix-scenario-weighted.js` |
+| **Reports**          | ✅ Auto-generated                     | ❌ Manual (add flags)                       |
+| **Exit Codes**       | ✅ Formatted output                   | ✅ Raw output                               |
+| **Speed**            | Slightly slower                       | ⚡ Faster                                   |
+| **Best For**         | CI/CD, Production                     | Development, Debug                          |
+| **Output**           | Clean, formatted                      | K6 native output                            |
+| **Reports Location** | `reports/`                            | Custom or none                              |
 
 ---
 
@@ -476,6 +564,8 @@ rm -rf reports/*
 | ----------------------------- | ---------------------------------------------------------- |
 | Run smoke test (with reports) | `./scripts/run-smoke-tests.sh`                             |
 | Run smoke test (quick)        | `k6 run tests/smoke/smoke-test.js`                         |
+| Run mix scenario tests        | `./scripts/run-distribution-tests.sh`                      |
+| Run mix test (quick)          | `k6 run tests/mix/mix-scenario-weighted.js`                |
 | Run functional tests          | `./scripts/run-functional-tests.sh`                        |
 | Run all tests                 | `./scripts/run-all-tests.sh`                               |
 | Clean reports                 | `./scripts/clean-reports.sh`                               |
@@ -493,11 +583,17 @@ k6-demoblaze/
 ├── tests/                    # K6 test files (.js)
 │   ├── functional/
 │   │   └── signup.js        # Run: k6 run tests/functional/signup.js
+│   ├── mix/
+│   │   ├── mix-scenario-weighted.js    # Run: k6 run tests/mix/mix-scenario-weighted.js
+│   │   ├── mix-scenario.js             # Run: k6 run tests/mix/mix-scenario.js
+│   │   ├── mix-scenario-advanced.js    # Run: k6 run tests/mix/mix-scenario-advanced.js
+│   │   └── mix-scenario-shared-iterations.js # Run: k6 run tests/mix/mix-scenario-shared-iterations.js
 │   └── smoke/
 │       └── smoke-test.js    # Run: k6 run tests/smoke/smoke-test.js
 │
 ├── scripts/                  # Shell scripts (.sh)
 │   ├── run-smoke-tests.sh   # Run: ./scripts/run-smoke-tests.sh
+│   ├── run-distribution-tests.sh  # Run: ./scripts/run-distribution-tests.sh
 │   ├── run-functional-tests.sh
 │   ├── run-all-tests.sh
 │   └── clean-reports.sh
@@ -548,6 +644,7 @@ Add to `~/.zshrc` or `~/.bashrc`:
 
 ```bash
 alias k6-smoke='cd ~/Project/k6/k6-demoblaze && ./scripts/run-smoke-tests.sh'
+alias k6-mix='cd ~/Project/k6/k6-demoblaze && ./scripts/run-distribution-tests.sh'
 alias k6-all='cd ~/Project/k6/k6-demoblaze && ./scripts/run-all-tests.sh'
 ```
 
@@ -555,6 +652,7 @@ Then just:
 
 ```bash
 k6-smoke
+k6-mix
 k6-all
 ```
 
@@ -674,6 +772,7 @@ cat src/config/test-profiles.js
 
    ```bash
    ./scripts/run-smoke-tests.sh
+   ./scripts/run-distribution-tests.sh
    ```
 
    - Best for: CI/CD, Production, Consistent reporting
@@ -681,6 +780,7 @@ cat src/config/test-profiles.js
 2. **Direct K6** (Quick Testing)
    ```bash
    k6 run tests/smoke/smoke-test.js
+   k6 run tests/mix/mix-scenario-weighted.js
    ```
    - Best for: Development, Debugging, Quick iteration
 

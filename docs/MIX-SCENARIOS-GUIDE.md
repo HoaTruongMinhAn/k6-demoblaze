@@ -139,14 +139,17 @@ export const options = {
 ### Using the Script
 
 ```bash
-# Run basic mix scenario
-./scripts/run-mix-tests.sh
+# Run all distribution profiles
+./scripts/run-distribution-tests.sh
+
+# Run specific profile
+./scripts/run-distribution-tests.sh ecommerce
 
 # Run with custom parameters
-VUS=20 DURATION=60s ./scripts/run-mix-tests.sh
+VUS=20 DURATION=60s ./scripts/run-distribution-tests.sh
 
 # Run specific environment
-ENVIRONMENT=uat ./scripts/run-mix-tests.sh
+ENVIRONMENT=uat ./scripts/run-distribution-tests.sh
 ```
 
 ### Direct K6 Commands

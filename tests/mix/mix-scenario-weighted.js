@@ -4,61 +4,46 @@ import {
   loginAndValidate,
   signUpAndLoginWithValidation,
 } from "../../src/api/auth-api.js";
-import { getTestProfile } from "../../src/config/test-profiles.js";
+import {
+  getTestProfile,
+  getDistributionProfile,
+  generateScenariosConfig,
+  calculateVUDistribution,
+} from "../../src/config/test-profiles.js";
 import { getExistingUser } from "../../src/utils/test-data.js";
 import { preActionDelay, betweenActionDelay } from "../../src/utils/timing.js";
 
 /**
- * Mix Scenario Test - Weighted Distribution Approach
+ * Mix Scenario Test - Dynamic Weighted Distribution Approach
  *
- * This is the K6 expert's preferred approach using weighted scenarios.
- * K6 automatically distributes VUs across scenarios based on weights.
+ * This uses a flexible distribution system that allows easy configuration
+ * of different user behavior patterns without hardcoding percentages.
  *
- * Distribution:
- * - 20% users only sign up (weight: 2)
- * - 20% users only login (weight: 2)
- * - 60% users sign up then login (weight: 6)
+ * Configuration:
+ * - Distribution profile can be set via DISTRIBUTION_PROFILE environment variable
+ * - Defaults to 'auth_basic' profile (20% signup, 20% login, 60% signup+login)
+ * - Available profiles: auth_basic, ecommerce, high_conversion, browse_heavy, load_test
  *
- * Total weight: 10 (2 + 2 + 6)
- * Percentages: 2/10=20%, 2/10=20%, 6/10=60%
+ * Usage:
+ * DISTRIBUTION_PROFILE=ecommerce k6 run mix-scenario-weighted.js
  */
 
+// Get test profile and distribution profile
 const mixProfile = getTestProfile("mix");
+const distributionProfileName = __ENV.DISTRIBUTION_PROFILE || "auth_basic";
+const distributionProfile = getDistributionProfile(distributionProfileName);
 
-export const options = {
-  scenarios: {
-    // Weighted scenarios using constant-vus executor (simpler approach)
-    signup_only: {
-      executor: "constant-vus",
-      exec: "signupOnly",
-      vus: Math.ceil(mixProfile.vus * 0.2), // 20% of VUs
-      duration: mixProfile.duration,
-      tags: { scenario: "signup_only" },
-    },
+// Override VU and duration from environment variables if provided
+const vus = __ENV.VUS ? parseInt(__ENV.VUS) : mixProfile.vus;
+const duration = __ENV.DURATION || mixProfile.duration;
 
-    login_only: {
-      executor: "constant-vus",
-      exec: "loginOnly",
-      vus: Math.ceil(mixProfile.vus * 0.2), // 20% of VUs
-      duration: mixProfile.duration,
-      tags: { scenario: "login_only" },
-    },
-
-    signup_and_login: {
-      executor: "constant-vus",
-      exec: "signupAndLogin",
-      vus: Math.ceil(mixProfile.vus * 0.6), // 60% of VUs
-      duration: mixProfile.duration,
-      tags: { scenario: "signup_and_login" },
-    },
-  },
-
-  thresholds: mixProfile.thresholds,
-  tags: {
-    test_type: "mix",
-    feature: "authentication",
-  },
-};
+// Generate dynamic scenarios configuration
+export const options = generateScenariosConfig(
+  distributionProfile,
+  vus,
+  duration,
+  mixProfile.thresholds
+);
 
 /**
  * Signup only scenario - New users who abandon after signup
@@ -91,21 +76,68 @@ export function signupAndLogin() {
 }
 
 /**
+ * Add to cart scenario - Users adding items to cart
+ * TODO: Implement when cart functionality is available
+ */
+export function addToCart() {
+  preActionDelay();
+  // Placeholder for future cart functionality
+  console.log("Add to cart scenario - Not yet implemented");
+  betweenActionDelay();
+}
+
+/**
+ * Place order scenario - Users completing purchases
+ * TODO: Implement when order functionality is available
+ */
+export function placeOrder() {
+  preActionDelay();
+  // Placeholder for future order functionality
+  console.log("Place order scenario - Not yet implemented");
+  betweenActionDelay();
+}
+
+/**
  * Setup function - runs once before all scenarios
  */
 export function setup() {
-  console.log("=== Mix Scenario Test Setup (Weighted) ===");
+  console.log("=== Mix Scenario Test Setup (Dynamic Weighted) ===");
+  console.log(`Distribution Profile: ${distributionProfileName}`);
   console.log(`Total VUs: ${mixProfile.vus}`);
-  console.log(
-    `Signup Only: ${Math.ceil(mixProfile.vus * 0.2)} iterations (20%)`
-  );
-  console.log(
-    `Login Only: ${Math.ceil(mixProfile.vus * 0.2)} iterations (20%)`
-  );
-  console.log(
-    `Signup + Login: ${Math.ceil(mixProfile.vus * 0.6)} iterations (60%)`
-  );
   console.log(`Duration: ${mixProfile.duration}`);
+  console.log("");
+
+  // Calculate and display VU distribution
+  const vusDistribution = calculateVUDistribution(
+    distributionProfile,
+    mixProfile.vus
+  );
+
+  console.log("VU Distribution:");
+  Object.entries(distributionProfile.scenarios).forEach(
+    ([scenarioName, scenarioConfig]) => {
+      const vus = vusDistribution[scenarioName];
+      const percentage = ((vus / mixProfile.vus) * 100).toFixed(1);
+      console.log(
+        `  ${scenarioName}: ${vus} VUs (${percentage}%) - ${scenarioConfig.description}`
+      );
+    }
+  );
+
+  console.log("");
+  console.log("Available Distribution Profiles:");
+  console.log("  auth_basic: Basic authentication flow (current default)");
+  console.log("  ecommerce: E-commerce focused with shopping behaviors");
+  console.log("  high_conversion: Optimized for purchase completion");
+  console.log("  browse_heavy: Users mostly browsing");
+  console.log("  load_test: Equal distribution for stress testing");
+  console.log("");
+  console.log(
+    `Usage: DISTRIBUTION_PROFILE=${distributionProfileName} k6 run mix-scenario-weighted.js`
+  );
+  console.log(
+    "Available profiles: auth_basic, ecommerce, high_conversion, browse_heavy, load_test"
+  );
 }
 
 /**

@@ -55,6 +55,10 @@ for test_file in "${functional_tests[@]}"; do
 done
 
 echo ""
+echo "  Mix Scenario Tests: 1 (dynamic distribution profiles)"
+echo "    • run-distribution-tests.sh (auth_basic, ecommerce, high_conversion, browse_heavy, load_test)"
+
+echo ""
 echo "Configuration: src/config/test-profiles.js"
 echo "=========================================="
 echo ""
@@ -77,6 +81,15 @@ echo "Step 2: Running Functional Tests..."
 if [ $? -ne 0 ]; then
   echo ""
   echo "❌ Functional tests failed."
+  exit 1
+fi
+
+echo ""
+echo "Step 3: Running Mix Scenario Tests..."
+./scripts/run-distribution-tests.sh
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ Mix scenario tests failed."
   exit 1
 fi
 

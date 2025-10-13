@@ -1,6 +1,10 @@
 #!/bin/bash
 
-# Mix Scenario Test Runner
+# ⚠️  DEPRECATED: This script is deprecated and will be removed in a future version
+# ⚠️  Please use: ./scripts/run-distribution-tests.sh instead
+# ⚠️  The new script provides dynamic distribution profiles and better functionality
+
+# Mix Scenario Test Runner (DEPRECATED)
 # Runs realistic user behavior simulation with weighted scenarios
 # 
 # Usage:

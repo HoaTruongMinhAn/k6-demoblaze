@@ -89,6 +89,99 @@ export const TEST_PROFILES = {
 };
 
 /**
+ * Scenario Distribution Profiles
+ *
+ * Defines different distribution patterns for mix scenarios.
+ * Each profile specifies how VUs are distributed across different user flows.
+ *
+ * @type {Object.<string, {scenarios: Object.<string, {weight: number, description: string}>}>}
+ */
+export const DISTRIBUTION_PROFILES = {
+  /** Basic authentication flow - Current implementation */
+  auth_basic: {
+    scenarios: {
+      signup_only: {
+        weight: 2,
+        description: "New users who abandon after signup",
+      },
+      login_only: { weight: 2, description: "Returning users" },
+      signup_and_login: {
+        weight: 6,
+        description: "New users completing full flow",
+      },
+    },
+  },
+
+  /** E-commerce focused - More shopping behaviors */
+  ecommerce: {
+    scenarios: {
+      signup_only: {
+        weight: 1,
+        description: "New users who abandon after signup",
+      },
+      login_only: { weight: 3, description: "Returning users" },
+      signup_and_login: {
+        weight: 4,
+        description: "New users completing full flow",
+      },
+      add_to_cart: { weight: 3, description: "Users adding items to cart" },
+      place_order: { weight: 2, description: "Users completing purchases" },
+    },
+  },
+
+  /** High conversion - Optimized for purchase completion */
+  high_conversion: {
+    scenarios: {
+      signup_only: {
+        weight: 1,
+        description: "New users who abandon after signup",
+      },
+      login_only: { weight: 2, description: "Returning users" },
+      signup_and_login: {
+        weight: 3,
+        description: "New users completing full flow",
+      },
+      add_to_cart: { weight: 4, description: "Users adding items to cart" },
+      place_order: { weight: 5, description: "Users completing purchases" },
+    },
+  },
+
+  /** Browse-heavy - Users mostly browsing */
+  browse_heavy: {
+    scenarios: {
+      signup_only: {
+        weight: 3,
+        description: "New users who abandon after signup",
+      },
+      login_only: { weight: 4, description: "Returning users" },
+      signup_and_login: {
+        weight: 2,
+        description: "New users completing full flow",
+      },
+      add_to_cart: { weight: 1, description: "Users adding items to cart" },
+      place_order: { weight: 1, description: "Users completing purchases" },
+    },
+  },
+
+  /** Load testing - Equal distribution for stress testing */
+  load_test: {
+    scenarios: {
+      signup_only: {
+        weight: 1,
+        description: "New users who abandon after signup",
+      },
+      login_only: { weight: 1, description: "Returning users" },
+      signup_and_login: {
+        weight: 1,
+        description: "New users completing full flow",
+      },
+      add_to_cart: { weight: 1, description: "Users adding items to cart" },
+      place_order: { weight: 1, description: "Users completing purchases" },
+    },
+  },
+};
+
+/**
  * Environment configurations for different deployment stages
  *
  * Each environment defines:
@@ -155,4 +248,108 @@ export function getEnvironment(envName) {
     );
   }
   return env;
+}
+
+/**
+ * Get distribution profile by name
+ * @param {string} profileName - Distribution profile name
+ * @returns {Object} Distribution profile configuration
+ */
+export function getDistributionProfile(profileName) {
+  const profile = DISTRIBUTION_PROFILES[profileName];
+  if (!profile) {
+    throw new Error(
+      `Distribution profile "${profileName}" not found. Available: ${Object.keys(
+        DISTRIBUTION_PROFILES
+      ).join(", ")}`
+    );
+  }
+  return profile;
+}
+
+/**
+ * Calculate VU distribution based on scenario weights
+ * @param {Object} distributionProfile - Distribution profile with scenarios and weights
+ * @param {number} totalVUs - Total number of virtual users
+ * @returns {Object} VU distribution per scenario
+ */
+export function calculateVUDistribution(distributionProfile, totalVUs) {
+  const scenarios = distributionProfile.scenarios;
+  const totalWeight = Object.values(scenarios).reduce(
+    (sum, scenario) => sum + scenario.weight,
+    0
+  );
+
+  const distribution = {};
+  let allocatedVUs = 0;
+
+  // Calculate VUs for each scenario
+  Object.entries(scenarios).forEach(([scenarioName, scenarioConfig], index) => {
+    const percentage = scenarioConfig.weight / totalWeight;
+    const calculatedVUs = Math.round(totalVUs * percentage);
+
+    // For the last scenario, allocate remaining VUs to ensure total matches
+    if (index === Object.keys(scenarios).length - 1) {
+      distribution[scenarioName] = totalVUs - allocatedVUs;
+    } else {
+      distribution[scenarioName] = calculatedVUs;
+      allocatedVUs += calculatedVUs;
+    }
+  });
+
+  return distribution;
+}
+
+/**
+ * Generate K6 scenarios configuration from distribution profile
+ * @param {Object} distributionProfile - Distribution profile with scenarios and weights
+ * @param {number} totalVUs - Total number of virtual users
+ * @param {string} duration - Test duration
+ * @param {Object} thresholds - Performance thresholds
+ * @returns {Object} K6 scenarios configuration
+ */
+export function generateScenariosConfig(
+  distributionProfile,
+  totalVUs,
+  duration,
+  thresholds
+) {
+  const vusDistribution = calculateVUDistribution(
+    distributionProfile,
+    totalVUs
+  );
+  const scenarios = {};
+
+  Object.entries(distributionProfile.scenarios).forEach(
+    ([scenarioName, scenarioConfig]) => {
+      const vus = vusDistribution[scenarioName];
+      if (vus > 0) {
+        // Convert scenario name to camelCase function name
+        const functionName = scenarioName.replace(
+          /_([a-z])/g,
+          (match, letter) => letter.toUpperCase()
+        );
+
+        scenarios[scenarioName] = {
+          executor: "constant-vus",
+          exec: functionName,
+          vus: vus,
+          duration: duration,
+          tags: { scenario: scenarioName },
+        };
+      }
+    }
+  );
+
+  return {
+    scenarios,
+    thresholds,
+    tags: {
+      test_type: "mix",
+      feature: "dynamic_distribution",
+      distribution_profile: Object.keys(DISTRIBUTION_PROFILES).find(
+        (key) => DISTRIBUTION_PROFILES[key] === distributionProfile
+      ),
+    },
+  };
 }
