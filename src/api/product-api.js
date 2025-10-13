@@ -66,25 +66,14 @@ export function addToCartAndValidate(product, token, options = {}) {
  * @param {number|null} options.specificProductIndex - Specific product index, or null for random (default: null)
  * @returns {Object} Object with response and validation results
  */
-export function addRandomProductsToCartAndValidate(
-  loginResponse,
-  options = {}
-) {
+export function addRandomProductsToCartAndValidate(token, options = {}) {
   const {
     validateResponse = true,
     testName = "addToCart",
     minProducts = 1,
-    maxProducts = 3,
+    maxProducts = 5,
     specificProductIndex = null,
   } = options;
-
-  // Parse token from login response
-  const token = loginResponse.response.body
-    .split("Auth_token: ")[1]
-    .trim()
-    .replace(/\\"/g, "")
-    .replace(/\n/g, "")
-    .replace(/"$/, "");
 
   // Determine number of products to add
   const numProducts = randomIntBetween(minProducts, maxProducts);
@@ -192,4 +181,82 @@ export function getAllProducts() {
   }
 
   return products.map((productData) => Product.fromObject(productData));
+}
+
+/**
+ * Extract authentication token from login response
+ * @param {Object} loginResponse - Login response object with response property
+ * @returns {string} Extracted and cleaned authentication token
+ */
+export function getToken(loginResponse) {
+  return loginResponse.response.body
+    .split("Auth_token: ")[1]
+    .trim()
+    .replace(/\\"/g, "")
+    .replace(/\n/g, "")
+    .replace(/"$/, "");
+}
+
+export function viewCart(token) {
+  const url = configManager.getApiUrl("VIEW_CART");
+  const payload = JSON.stringify({
+    cookie: token,
+    flag: true,
+  });
+
+  const params = {
+    headers: {
+      "Content-Type": CONSTANTS.CONTENT_TYPES.APPLICATION_JSON,
+    },
+  };
+
+  return http.post(url, payload, params);
+}
+
+export function validateCartHasProducts(token, options = {}) {
+  const { validateResponse = true, testName = "viewCart" } = options;
+  const response = viewCart(token);
+
+  if (!validateResponse) {
+    return { response, validationPassed: null };
+  }
+
+  const validationResults = check(response, {
+    [`${testName} successful (status 200)`]: (r) =>
+      r.status === CONSTANTS.HTTP_STATUS.OK,
+    [`${testName} response has products`]: (r) => {
+      try {
+        const body = JSON.parse(r.body);
+        return body.Items && body.Items.length > 0;
+      } catch (e) {
+        return false;
+      }
+    },
+  });
+
+  return { response, validationPassed: validationResults };
+}
+
+export function validateCartEmpty(token, options = {}) {
+  const { validateResponse = true, testName = "viewCart" } = options;
+  const response = viewCart(token);
+
+  if (!validateResponse) {
+    return { response, validationPassed: null };
+  }
+
+  const validationResults = check(response, {
+    [`${testName} successful (status 200)`]: (r) =>
+      r.status === CONSTANTS.HTTP_STATUS.OK,
+    [`${testName} response is empty`]: (r) => {
+      try {
+        const body = JSON.parse(r.body);
+        return body.Items && body.Items.length === 0;
+      } catch (e) {
+        return false;
+      }
+    },
+  });
+
+  return { response, validationPassed: validationResults };
 }

@@ -5,6 +5,8 @@ import { preActionDelay, betweenActionDelay } from "../../src/utils/timing.js";
 import {
   addRandomProductsToCartAndValidate,
   viewCart,
+  validateCartHasProducts,
+  validateCartEmpty,
   getToken,
 } from "../../src/api/product-api.js";
 
@@ -27,9 +29,6 @@ export default function () {
 
   const loginResponse = loginAndValidate(user);
   const token = getToken(loginResponse);
-
-  const cartResult = addRandomProductsToCartAndValidate(loginResponse);
-  console.log(`Added ${cartResult.totalProducts} products to cart`);
-
+  validateCartEmpty(token);
   betweenActionDelay();
 }

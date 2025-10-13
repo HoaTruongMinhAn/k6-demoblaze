@@ -45,6 +45,7 @@ export class ConfigManager {
         SIGN_UP: "/signup",
         LOGIN: "/login",
         ADD_TO_CART: "/addtocart",
+        VIEW_CART: "/viewcart",
       },
       WEB_ENDPOINTS: {
         LANDING: "/",
