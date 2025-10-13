@@ -75,6 +75,17 @@ export const TEST_PROFILES = {
       checks: ["rate>0.85"], // 85% checks pass
     },
   },
+
+  /** Mixed user behavior - Realistic traffic patterns with different user flows */
+  mix: {
+    vus: 5,
+    duration: "5s",
+    thresholds: {
+      http_req_duration: ["p(95)<2000", "p(99)<3000"], // Balanced performance expectations
+      http_req_failed: ["rate<0.05"], // Up to 5% errors acceptable
+      checks: ["rate>0.90"], // 90% checks pass
+    },
+  },
 };
 
 /**
