@@ -25,9 +25,12 @@ smoke_tests=(tests/smoke/*.js)
 
 # Define functional test execution order (must match run-functional-tests.sh)
 functional_test_order=(
-  "signup.js"
-  "login.js"
-  "signup-login.js"
+  "auth/signup.js"
+  "auth/login.js"
+  "auth/signup-login.js"
+  "cart/addItems.js"
+  "cart/viewCart.js"
+  "cart/addItems-viewCart.js"
 )
 
 # Build functional test paths

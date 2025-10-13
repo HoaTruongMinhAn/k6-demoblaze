@@ -5,9 +5,12 @@
 # Runs all functional tests with their configured profiles
 #
 # Available Tests:
-#   - signup.js         : User registration test
-#   - login.js          : User login test
-#   - signup-login.js   : Complete authentication flow (signup + login)
+#   - auth/signup.js         : User registration test
+#   - auth/login.js          : User login test
+#   - auth/signup-login.js   : Complete authentication flow (signup + login)
+#   - cart/addItems.js       : Add items to cart test
+#   - cart/viewCart.js       : View cart test
+#   - cart/addItems-viewCart.js : Complete cart flow (add items + view cart)
 #
 # Note: Test configuration (VUs, duration, thresholds) is loaded from
 #       src/config/test-profiles.js by each test file.
@@ -22,9 +25,12 @@ echo ""
 
 # Define test execution order
 test_order=(
-  "signup.js"
-  "login.js"
-  "signup-login.js"
+  "auth/signup.js"
+  "auth/login.js"
+  "auth/signup-login.js"
+  "cart/addItems.js"
+  "cart/viewCart.js"
+  "cart/addItems-viewCart.js"
 )
 
 # Build full paths and count tests

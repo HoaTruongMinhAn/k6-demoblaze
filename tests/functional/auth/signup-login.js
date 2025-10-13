@@ -1,17 +1,19 @@
-import { configManager } from "../../src/config/config-manager.js";
-import { loginAndValidate } from "../../src/api/auth-api.js";
-import { getTestProfile } from "../../src/config/test-profiles.js";
-import { getExistingUser } from "../../src/utils/test-data.js";
-import { preActionDelay, betweenActionDelay } from "../../src/utils/timing.js";
+import { configManager } from "../../../src/config/config-manager.js";
+import { signUpAndLoginWithValidation } from "../../../src/api/auth-api.js";
+import { getTestProfile } from "../../../src/config/test-profiles.js";
+import {
+  preActionDelay,
+  betweenActionDelay,
+} from "../../../src/utils/timing.js";
 
 /**
- * Functional Test: User Login
+ * Functional Test: User Sign Up and Login
  * Tests the user registration workflow
  *
  * Test Steps:
  * 1. Generate unique user credentials
- * 2. Send login request
- * 3. Validate successful login
+ * 2. Send sign-up request
+ * 3. Validate successful registration
  * 4. Send login request
  * 5. Validate successful login
  */
@@ -30,7 +32,7 @@ export const options = {
 
 export default function () {
   preActionDelay();
-  const user = getExistingUser("customer");
-  loginAndValidate(user);
+  const user = configManager.generateUserInfo("customer");
+  signUpAndLoginWithValidation(user);
   betweenActionDelay();
 }

@@ -34,7 +34,7 @@ Located in `scripts/` directory:
 Located in `tests/` directory:
 
 - `tests/smoke/smoke-test.js`
-- `tests/functional/signup.js`
+- `tests/functional/auth/signup.js`
 - `tests/mix/mix-scenario-weighted.js`
 
 **What they do:**
@@ -223,7 +223,7 @@ Removes all generated test reports.
 k6 run tests/smoke/smoke-test.js
 
 # Functional test
-k6 run tests/functional/signup.js
+k6 run tests/functional/auth/signup.js
 
 # Mix scenario test (recommended approach)
 k6 run tests/mix/mix-scenario-weighted.js
@@ -252,7 +252,7 @@ BASE_URL=https://api-dev.demoblaze.com k6 run tests/smoke/smoke-test.js
 ENVIRONMENT=uat \
 VUS=5 \
 DURATION=1m \
-k6 run tests/functional/signup.js
+k6 run tests/functional/auth/signup.js
 ```
 
 ### **With Output Options**
@@ -447,7 +447,7 @@ k6 run tests/smoke/smoke-test.js
 ENVIRONMENT=uat k6 run tests/smoke/smoke-test.js
 
 # Production
-ENVIRONMENT=prod k6 run tests/functional/signup.js
+ENVIRONMENT=prod k6 run tests/functional/auth/signup.js
 ```
 
 #### **Manual URL Override**
@@ -489,7 +489,7 @@ unset ENVIRONMENT
 ```bash
 # Run tests in parallel (separate terminals or background)
 k6 run tests/smoke/smoke-test.js &
-k6 run tests/functional/signup.js &
+k6 run tests/functional/auth/signup.js &
 wait  # Wait for all to complete
 ```
 
@@ -582,7 +582,8 @@ rm -rf reports/*
 k6-demoblaze/
 ├── tests/                    # K6 test files (.js)
 │   ├── functional/
-│   │   └── signup.js        # Run: k6 run tests/functional/signup.js
+│   │   └── auth/
+│   │       └── signup.js    # Run: k6 run tests/functional/auth/signup.js
 │   ├── mix/
 │   │   ├── mix-scenario-weighted.js    # Run: k6 run tests/mix/mix-scenario-weighted.js
 │   │   ├── mix-scenario.js             # Run: k6 run tests/mix/mix-scenario.js

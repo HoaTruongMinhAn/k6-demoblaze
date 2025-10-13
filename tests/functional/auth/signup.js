@@ -1,7 +1,10 @@
-import { configManager } from "../../src/config/config-manager.js";
-import { signUpAndValidate } from "../../src/api/auth-api.js";
-import { getTestProfile } from "../../src/config/test-profiles.js";
-import { preActionDelay, betweenActionDelay } from "../../src/utils/timing.js";
+import { configManager } from "../../../src/config/config-manager.js";
+import { signUpAndValidate } from "../../../src/api/auth-api.js";
+import { getTestProfile } from "../../../src/config/test-profiles.js";
+import {
+  preActionDelay,
+  betweenActionDelay,
+} from "../../../src/utils/timing.js";
 
 /**
  * Functional Test: User Sign Up
