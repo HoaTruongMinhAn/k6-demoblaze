@@ -13,7 +13,8 @@
 #       Edit that file to change test parameters.
 ###############################################################################
 
-set -e
+# Note: We don't use 'set -e' here because we want to continue running all test suites
+# even if individual test suites fail. We handle errors manually and show a summary.
 
 echo "=========================================="
 echo "K6 Test Suite - Full Execution"
@@ -72,29 +73,17 @@ START_TIME=$(date +%s)
 # Run smoke tests first
 echo "Step 1: Running Smoke Tests..."
 ./scripts/run-smoke-tests.sh
-if [ $? -ne 0 ]; then
-  echo ""
-  echo "❌ Smoke tests failed. Stopping execution."
-  exit 1
-fi
+smoke_exit_code=$?
 
 echo ""
 echo "Step 2: Running Functional Tests..."
 ./scripts/run-functional-tests.sh
-if [ $? -ne 0 ]; then
-  echo ""
-  echo "❌ Functional tests failed."
-  exit 1
-fi
+functional_exit_code=$?
 
 echo ""
 echo "Step 3: Running Mix Scenario Tests..."
 ./scripts/run-distribution-tests.sh
-if [ $? -ne 0 ]; then
-  echo ""
-  echo "❌ Mix scenario tests failed."
-  exit 1
-fi
+distribution_exit_code=$?
 
 # Calculate duration
 END_TIME=$(date +%s)
@@ -102,9 +91,46 @@ DURATION=$((END_TIME - START_TIME))
 
 echo ""
 echo "=========================================="
-echo "✅ All Tests Completed Successfully"
+echo "Test Suite Summary"
 echo "=========================================="
+
+# Count successful test suites
+success_count=0
+total_suites=3
+
+if [ $smoke_exit_code -eq 0 ]; then
+  echo "✅ Smoke Tests: PASSED"
+  ((success_count++))
+else
+  echo "❌ Smoke Tests: FAILED"
+fi
+
+if [ $functional_exit_code -eq 0 ]; then
+  echo "✅ Functional Tests: PASSED"
+  ((success_count++))
+else
+  echo "❌ Functional Tests: FAILED"
+fi
+
+if [ $distribution_exit_code -eq 0 ]; then
+  echo "✅ Mix Scenario Tests: PASSED"
+  ((success_count++))
+else
+  echo "❌ Mix Scenario Tests: FAILED"
+fi
+
+echo ""
+echo "Results: $success_count/$total_suites test suites passed"
 echo "Total Duration: ${DURATION}s"
 echo "Reports saved in: ./reports/"
+
+if [ $success_count -eq $total_suites ]; then
+  echo "✅ All test suites completed successfully!"
+  exit 0
+else
+  echo "⚠️  Some test suites failed, but all tests were executed."
+  echo "Check individual test reports for details."
+  exit 1
+fi
 echo "=========================================="
 

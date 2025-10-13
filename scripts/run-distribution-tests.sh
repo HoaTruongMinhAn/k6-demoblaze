@@ -15,7 +15,8 @@
 #   - shared-iterations: Educational approach using shared-iterations executor
 #   - advanced: Advanced approach with ramping patterns
 
-set -e
+# Note: We don't use 'set -e' here because we want to continue running all profiles
+# even if individual profiles fail. We handle errors manually and show a summary.
 
 # Colors for output
 RED='\033[0;31m'
@@ -30,7 +31,7 @@ VUS=${VUS:-5}
 DURATION=${DURATION:-10s}
 OUTPUT_DIR=${OUTPUT_DIR:-"reports"}
 TEST_FILE=${TEST_FILE:-"weighted"}
-PROFILE=${DISTRIBUTION_PROFILE:-auth_basic}
+PROFILE=${DISTRIBUTION_PROFILE:-ecommerce}
 
 echo -e "${BLUE}=== Dynamic Distribution Test Runner ===${NC}"
 echo -e "Environment: ${YELLOW}${ENVIRONMENT}${NC}"
@@ -136,8 +137,11 @@ run_test() {
                 "Max VUs": .vus_max.value
             }' ${summary_file} 2>/dev/null || echo "Summary format not available"
         fi
+        return 0
     else
         echo -e "\n${RED}❌ Test failed!${NC}"
+        echo -e "Results saved to: ${YELLOW}${output_file}${NC}"
+        echo -e "Summary saved to: ${YELLOW}${summary_file}${NC}"
         return 1
     fi
     
@@ -192,8 +196,10 @@ if [ "$1" != "" ]; then
         
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}✅ Single profile test completed successfully!${NC}"
+            exit 0
         else
             echo -e "${RED}❌ Single profile test failed!${NC}"
+            echo -e "Check the test reports for details."
             exit 1
         fi
     else

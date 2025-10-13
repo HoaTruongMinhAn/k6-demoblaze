@@ -5,6 +5,13 @@ import {
   signUpAndLoginWithValidation,
 } from "../../src/api/auth-api.js";
 import {
+  addRandomProductsToCartAndValidate,
+  viewCart as viewCartAPI,
+  validateCartHasProducts,
+  validateCartEmpty,
+  getToken,
+} from "../../src/api/product-api.js";
+import {
   getTestProfile,
   getDistributionProfile,
   generateScenariosConfig,
@@ -77,23 +84,62 @@ export function signupAndLogin() {
 
 /**
  * Add to cart scenario - Users adding items to cart
- * TODO: Implement when cart functionality is available
+ * Implements the addItems.js functionality
  */
 export function addToCart() {
   preActionDelay();
-  // Placeholder for future cart functionality
-  console.log("Add to cart scenario - Not yet implemented");
+  const user = configManager.generateUserInfo("customer");
+  signUpAndValidate(user);
+
+  const loginResponse = loginAndValidate(user);
+  const token = getToken(loginResponse);
+
+  const cartResult = addRandomProductsToCartAndValidate(token);
+  console.log(`Added ${cartResult.totalProducts} products to cart`);
+
   betweenActionDelay();
 }
 
 /**
  * Place order scenario - Users completing purchases
- * TODO: Implement when order functionality is available
+ * Implements the addItems-viewCart.js functionality (full cart flow)
  */
 export function placeOrder() {
   preActionDelay();
-  // Placeholder for future order functionality
-  console.log("Place order scenario - Not yet implemented");
+  const user = configManager.generateUserInfo("customer");
+  signUpAndValidate(user);
+
+  const loginResponse = loginAndValidate(user);
+  const token = getToken(loginResponse);
+
+  // Check empty cart first
+  validateCartEmpty(token);
+
+  // Add items to cart
+  const cartResult = addRandomProductsToCartAndValidate(token);
+  console.log(`Added ${cartResult.totalProducts} products to cart`);
+
+  // Verify cart has products
+  validateCartHasProducts(token);
+
+  betweenActionDelay();
+}
+
+/**
+ * View cart scenario - Users viewing their cart
+ * Implements the viewCart.js functionality
+ */
+export function viewCart() {
+  preActionDelay();
+  const user = configManager.generateUserInfo("customer");
+  signUpAndValidate(user);
+
+  const loginResponse = loginAndValidate(user);
+  const token = getToken(loginResponse);
+
+  // Check that cart is empty
+  validateCartEmpty(token);
+
   betweenActionDelay();
 }
 

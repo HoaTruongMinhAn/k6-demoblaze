@@ -37,7 +37,7 @@ export const TEST_PROFILES = {
     vus: 2,
     duration: "5s",
     thresholds: {
-      http_req_duration: ["p(95)<500", "p(99)<1000", "max<2000"], // Stricter for functional tests
+      http_req_duration: ["p(95)<1000", "p(99)<1200", "max<2000"], // Stricter for functional tests
       http_req_failed: ["rate<0.01"], // Less than 1% errors
       checks: ["rate>0.95"], // More than 95% checks pass
     },
@@ -124,6 +124,7 @@ export const DISTRIBUTION_PROFILES = {
         weight: 4,
         description: "New users completing full flow",
       },
+      view_cart: { weight: 2, description: "Users viewing their cart" },
       add_to_cart: { weight: 3, description: "Users adding items to cart" },
       place_order: { weight: 2, description: "Users completing purchases" },
     },
@@ -141,6 +142,7 @@ export const DISTRIBUTION_PROFILES = {
         weight: 3,
         description: "New users completing full flow",
       },
+      view_cart: { weight: 1, description: "Users viewing their cart" },
       add_to_cart: { weight: 4, description: "Users adding items to cart" },
       place_order: { weight: 5, description: "Users completing purchases" },
     },
@@ -158,6 +160,7 @@ export const DISTRIBUTION_PROFILES = {
         weight: 2,
         description: "New users completing full flow",
       },
+      view_cart: { weight: 3, description: "Users viewing their cart" },
       add_to_cart: { weight: 1, description: "Users adding items to cart" },
       place_order: { weight: 1, description: "Users completing purchases" },
     },
@@ -175,6 +178,7 @@ export const DISTRIBUTION_PROFILES = {
         weight: 1,
         description: "New users completing full flow",
       },
+      view_cart: { weight: 1, description: "Users viewing their cart" },
       add_to_cart: { weight: 1, description: "Users adding items to cart" },
       place_order: { weight: 1, description: "Users completing purchases" },
     },

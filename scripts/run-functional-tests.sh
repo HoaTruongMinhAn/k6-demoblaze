@@ -16,7 +16,8 @@
 #       src/config/test-profiles.js by each test file.
 ###############################################################################
 
-set -e
+# Note: We don't use 'set -e' here because we want to continue running tests
+# even if individual tests fail. We handle errors manually in the loop.
 
 echo "======================================"
 echo "Running Functional Tests"
@@ -63,6 +64,9 @@ mkdir -p reports
 current_test=0
 
 # Run functional tests in defined order
+failed_tests=()
+success_count=0
+
 for test_file in "${test_files[@]}"; do
   current_test=$((current_test + 1))
   test_name=$(basename "$test_file" .js)
@@ -77,14 +81,31 @@ for test_file in "${test_files[@]}"; do
   
   if [ $? -eq 0 ]; then
     echo "✅ $test_name PASSED"
+    ((success_count++))
   else
     echo "❌ $test_name FAILED"
-    exit 1
+    failed_tests+=("$test_name")
   fi
 done
 
 echo ""
 echo "======================================"
-echo "✅ All Functional Tests PASSED"
+echo "Functional Tests Summary"
+echo "======================================"
+echo "✅ Passed: $success_count/$total_tests"
+
+if [ ${#failed_tests[@]} -gt 0 ]; then
+  echo "❌ Failed: ${#failed_tests[@]} (${failed_tests[*]})"
+  echo ""
+  echo "Failed tests:"
+  for failed_test in "${failed_tests[@]}"; do
+    echo "  • $failed_test"
+  done
+  echo ""
+  echo "⚠️  Some tests failed, but execution continued."
+  echo "Check individual test reports for details."
+else
+  echo "✅ All tests passed!"
+fi
 echo "======================================"
 

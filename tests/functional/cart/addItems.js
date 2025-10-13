@@ -10,7 +10,6 @@ import {
 } from "../../../src/utils/timing.js";
 import {
   addRandomProductsToCartAndValidate,
-  viewCart,
   getToken,
 } from "../../../src/api/product-api.js";
 
@@ -34,7 +33,7 @@ export default function () {
   const loginResponse = loginAndValidate(user);
   const token = getToken(loginResponse);
 
-  const cartResult = addRandomProductsToCartAndValidate(loginResponse);
+  const cartResult = addRandomProductsToCartAndValidate(token);
   console.log(`Added ${cartResult.totalProducts} products to cart`);
 
   betweenActionDelay();
