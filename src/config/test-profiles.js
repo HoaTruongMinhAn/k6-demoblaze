@@ -334,13 +334,15 @@ export function calculateVUDistribution(distributionProfile, totalVUs) {
  * @param {number} totalVUs - Total number of virtual users
  * @param {string} duration - Test duration
  * @param {Object} thresholds - Performance thresholds
+ * @param {Object} cloudConfig - Cloud configuration (optional)
  * @returns {Object} K6 scenarios configuration
  */
 export function generateScenariosConfig(
   distributionProfile,
   totalVUs,
   duration,
-  thresholds
+  thresholds,
+  cloudConfig = null
 ) {
   const vusDistribution = calculateVUDistribution(
     distributionProfile,
@@ -369,7 +371,7 @@ export function generateScenariosConfig(
     }
   );
 
-  return {
+  const config = {
     scenarios,
     thresholds,
     tags: {
@@ -380,4 +382,11 @@ export function generateScenariosConfig(
       ),
     },
   };
+
+  // Add cloud configuration if provided
+  if (cloudConfig) {
+    config.cloud = cloudConfig;
+  }
+
+  return config;
 }

@@ -4,6 +4,13 @@
 # Functional Test Runner
 # Runs all functional tests with their configured profiles
 #
+# Usage:
+#   ./scripts/run-functional-tests.sh [local|cloud]
+#   
+# Options:
+#   local  - Run locally and stream output to cloud
+#   cloud  - Run directly on k6 cloud infrastructure (default)
+#
 # Available Tests:
 #   - auth/signup.js         : User registration test
 #   - auth/login.js          : User login test
@@ -19,8 +26,11 @@
 # Note: We don't use 'set -e' here because we want to continue running tests
 # even if individual tests fail. We handle errors manually in the loop.
 
+# Parse command line arguments
+RUN_MODE=${1:-cloud}
+
 echo "======================================"
-echo "Running Functional Tests"
+echo "Running Functional Tests - Mode: $RUN_MODE"
 echo "======================================"
 echo ""
 
@@ -74,10 +84,25 @@ for test_file in "${test_files[@]}"; do
   echo "[$current_test/$total_tests] Running: $test_name"
   echo "--------------------------------------"
   
-  k6 run \
-    --out json="reports/${test_name}-results.json" \
-    --summary-export="reports/${test_name}-summary.json" \
-    "$test_file"
+  # Build k6 command based on run mode
+  if [ "$RUN_MODE" = "local" ]; then
+    k6 run \
+      --out json="reports/${test_name}-results.json" \
+      --summary-export="reports/${test_name}-summary.json" \
+      -o cloud \
+      "$test_file"
+  elif [ "$RUN_MODE" = "cloud" ]; then
+    k6 cloud "$test_file"
+  else
+    echo "❌ Invalid run mode: $RUN_MODE"
+    echo ""
+    echo "Usage: $0 [local|cloud]"
+    echo ""
+    echo "Options:"
+    echo "  local  - Run locally and stream output to cloud"
+    echo "  cloud  - Run directly on k6 cloud infrastructure (default)"
+    exit 1
+  fi
   
   if [ $? -eq 0 ]; then
     echo "✅ $test_name PASSED"

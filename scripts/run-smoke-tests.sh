@@ -4,14 +4,24 @@
 # Smoke Test Runner
 # Runs quick validation tests to ensure system is functioning
 #
+# Usage:
+#   ./scripts/run-smoke-tests.sh [local|cloud]
+#   
+# Options:
+#   local  - Run locally and stream output to cloud
+#   cloud  - Run directly on k6 cloud infrastructure (default)
+#
 # Note: Test configuration (VUs, duration, thresholds) is loaded from
 #       src/config/test-profiles.js by the test file.
 ###############################################################################
 
 set -e
 
+# Parse command line arguments
+RUN_MODE=${1:-cloud}
+
 echo "======================================"
-echo "Running Smoke Tests"
+echo "Running Smoke Tests - Mode: $RUN_MODE"
 echo "======================================"
 echo ""
 echo "Note: Tests use configuration from src/config/test-profiles.js"
@@ -21,11 +31,35 @@ echo "======================================"
 # Create reports directory if it doesn't exist
 mkdir -p reports
 
-# Run smoke tests
-k6 run \
-  --out json=reports/smoke-test-results.json \
-  --summary-export=reports/smoke-test-summary.json \
-  tests/smoke/smoke-test.js
+# Run smoke tests based on mode
+if [ "$RUN_MODE" = "local" ]; then
+  echo "Running locally with cloud output streaming..."
+  echo "Project ID will be read from smoke-test.js configuration"
+  echo ""
+  
+  k6 run \
+    --out json=reports/smoke-test-results.json \
+    --summary-export=reports/smoke-test-summary.json \
+    -o cloud \
+    tests/smoke/smoke-test.js
+    
+elif [ "$RUN_MODE" = "cloud" ]; then
+  echo "Running directly on k6 cloud infrastructure..."
+  echo "Project ID will be read from smoke-test.js configuration"
+  echo ""
+  
+  k6 cloud tests/smoke/smoke-test.js
+  
+else
+  echo "❌ Invalid run mode: $RUN_MODE"
+  echo ""
+  echo "Usage: $0 [local|cloud]"
+  echo ""
+  echo "Options:"
+  echo "  local  - Run locally and stream output to cloud"
+  echo "  cloud  - Run directly on k6 cloud infrastructure (default)"
+  exit 1
+fi
 
 EXIT_CODE=$?
 

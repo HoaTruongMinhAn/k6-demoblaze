@@ -2,11 +2,19 @@
 
 ###############################################################################
 # Complete Test Suite Runner
-# Runs all tests in sequence: smoke -> functional
+# Runs all tests in sequence: smoke -> functional -> distribution
+#
+# Usage:
+#   ./scripts/run-all-tests.sh [local|cloud]
+#   
+# Options:
+#   local  - Run locally and stream output to cloud
+#   cloud  - Run directly on k6 cloud infrastructure (default)
 #
 # Automatically discovers and runs all test files in:
 #   - tests/smoke/*.js
 #   - tests/functional/*.js
+#   - tests/mix/*.js
 #
 # Note: Test configuration (VUs, duration, thresholds) is loaded from
 #       src/config/test-profiles.js by each test file.
@@ -16,8 +24,15 @@
 # Note: We don't use 'set -e' here because we want to continue running all test suites
 # even if individual test suites fail. We handle errors manually and show a summary.
 
+# Parse command line arguments
+RUN_MODE=${1:-cloud}
+
 echo "=========================================="
-echo "K6 Test Suite - Full Execution"
+echo "K6 Test Suite - Full Execution - Mode: $RUN_MODE"
+echo "=========================================="
+echo ""
+echo "Note: Tests use configuration from src/config/test-profiles.js"
+echo "      Edit that file to change VUs, duration, or thresholds."
 echo "=========================================="
 echo ""
 
@@ -72,17 +87,17 @@ START_TIME=$(date +%s)
 
 # Run smoke tests first
 echo "Step 1: Running Smoke Tests..."
-./scripts/run-smoke-tests.sh
+./scripts/run-smoke-tests.sh $RUN_MODE
 smoke_exit_code=$?
 
 echo ""
 echo "Step 2: Running Functional Tests..."
-./scripts/run-functional-tests.sh
+./scripts/run-functional-tests.sh $RUN_MODE
 functional_exit_code=$?
 
 echo ""
 echo "Step 3: Running Mix Scenario Tests..."
-./scripts/run-distribution-tests.sh
+./scripts/run-distribution-tests.sh $RUN_MODE
 distribution_exit_code=$?
 
 # Calculate duration

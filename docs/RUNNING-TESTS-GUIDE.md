@@ -57,13 +57,19 @@ k6 run tests/mix/mix-scenario-weighted.js
 ### **Run Smoke Tests**
 
 ```bash
+# Cloud mode (default) - runs on k6 cloud infrastructure
 ./scripts/run-smoke-tests.sh
+./scripts/run-smoke-tests.sh cloud
+
+# Local mode - runs locally and streams to cloud
+./scripts/run-smoke-tests.sh local
 ```
 
 **What it does:**
 
 - ✅ Runs smoke test
-- ✅ Generates JSON reports in `reports/`
+- ✅ **Cloud mode**: Runs directly on k6 cloud infrastructure
+- ✅ **Local mode**: Runs locally, streams to cloud, generates JSON reports in `reports/`
 - ✅ Exports summary
 - ✅ Shows pass/fail status
 - ✅ Returns proper exit code
@@ -83,27 +89,57 @@ Running Smoke Tests
 ### **Run Functional Tests**
 
 ```bash
+# Cloud mode (default) - runs on k6 cloud infrastructure
 ./scripts/run-functional-tests.sh
+./scripts/run-functional-tests.sh cloud
+
+# Local mode - runs locally and streams to cloud
+./scripts/run-functional-tests.sh local
 ```
 
 **What it does:**
 
 - ✅ Runs all tests in `tests/functional/`
-- ✅ Generates reports for each test
+- ✅ **Cloud mode**: Runs directly on k6 cloud infrastructure
+- ✅ **Local mode**: Generates reports for each test, streams to cloud
 - ✅ Stops on first failure
 - ✅ Shows summary at end
 
 ### **Run Mix Scenario Tests (Enhanced)**
 
 ```bash
+# Cloud mode (default) - runs on k6 cloud infrastructure
 ./scripts/run-distribution-tests.sh
+./scripts/run-distribution-tests.sh cloud
+
+# Local mode - runs locally and streams to cloud
+./scripts/run-distribution-tests.sh local
+
+# Run specific profile
+./scripts/run-distribution-tests.sh cloud ecommerce
+./scripts/run-distribution-tests.sh local ecommerce
+```
+
+**Direct k6 execution (mix-scenario-weighted.js):**
+
+```bash
+# Cloud mode (default)
+DISTRIBUTION_PROFILE=ecommerce k6 cloud tests/mix/mix-scenario-weighted.js
+
+# Local mode with cloud streaming
+DISTRIBUTION_PROFILE=ecommerce k6 run -o cloud tests/mix/mix-scenario-weighted.js
+
+# With run mode environment variable
+RUN_MODE=cloud DISTRIBUTION_PROFILE=ecommerce k6 cloud tests/mix/mix-scenario-weighted.js
+RUN_MODE=local DISTRIBUTION_PROFILE=ecommerce k6 run -o cloud tests/mix/mix-scenario-weighted.js
 ```
 
 **What it does:**
 
 - ✅ Runs realistic user behavior simulation with **dynamic distribution profiles**
 - ✅ **5 pre-configured profiles**: auth_basic, ecommerce, high_conversion, browse_heavy, load_test
-- ✅ Generates detailed reports with JSON output
+- ✅ **Cloud mode**: Runs directly on k6 cloud infrastructure
+- ✅ **Local mode**: Generates detailed reports with JSON output, streams to cloud
 - ✅ Shows comprehensive summary with jq
 - ✅ Supports multiple test file types
 - ✅ Environment variable configuration
@@ -111,20 +147,24 @@ Running Smoke Tests
 **Available distribution profiles:**
 
 ```bash
-# Run all profiles
+# Run all profiles (cloud mode)
 ./scripts/run-distribution-tests.sh
+./scripts/run-distribution-tests.sh cloud
+
+# Run all profiles (local mode)
+./scripts/run-distribution-tests.sh local
 
 # Run specific profile
-./scripts/run-distribution-tests.sh ecommerce
-./scripts/run-distribution-tests.sh high_conversion
+./scripts/run-distribution-tests.sh cloud ecommerce
+./scripts/run-distribution-tests.sh local ecommerce
 
 # Different test approaches
-TEST_FILE=basic ./scripts/run-distribution-tests.sh auth_basic
-TEST_FILE=advanced ./scripts/run-distribution-tests.sh ecommerce
+TEST_FILE=basic ./scripts/run-distribution-tests.sh local auth_basic
+TEST_FILE=advanced ./scripts/run-distribution-tests.sh cloud ecommerce
 
 # With custom parameters
-VUS=20 DURATION=60s ./scripts/run-distribution-tests.sh
-ENVIRONMENT=uat OUTPUT_DIR=custom-reports ./scripts/run-distribution-tests.sh
+VUS=20 DURATION=60s ./scripts/run-distribution-tests.sh cloud
+ENVIRONMENT=uat OUTPUT_DIR=custom-reports ./scripts/run-distribution-tests.sh local
 ```
 
 **Distribution Profiles Explained:**
@@ -173,13 +213,21 @@ Using: Weighted Distribution (Recommended)
 ### **Run All Tests**
 
 ```bash
+# Cloud mode (default) - runs on k6 cloud infrastructure
 ./scripts/run-all-tests.sh
+./scripts/run-all-tests.sh cloud
+
+# Local mode - runs locally and streams to cloud
+./scripts/run-all-tests.sh local
 ```
 
 **What it does:**
 
 - ✅ Runs smoke tests first
 - ✅ If smoke passes, runs functional tests
+- ✅ Then runs distribution tests
+- ✅ **Cloud mode**: All tests run on k6 cloud infrastructure
+- ✅ **Local mode**: All tests run locally, stream to cloud, generate reports
 - ✅ Shows total duration
 - ✅ Comprehensive reporting
 
@@ -187,7 +235,7 @@ Using: Weighted Distribution (Recommended)
 
 ```
 ==========================================
-K6 Test Suite - Full Execution
+K6 Test Suite - Full Execution - Mode: cloud
 ==========================================
 
 Step 1: Running Smoke Tests...
@@ -195,6 +243,9 @@ Step 1: Running Smoke Tests...
 
 Step 2: Running Functional Tests...
 ✅ Functional tests passed
+
+Step 3: Running Mix Scenario Tests...
+✅ Distribution tests passed
 
 ==========================================
 ✅ All Tests Completed Successfully
@@ -425,16 +476,20 @@ The project supports three environments with automatic URL mapping:
 
 ```bash
 # SIT (default - no environment needed)
-./scripts/run-smoke-tests.sh
+./scripts/run-smoke-tests.sh                    # Cloud mode
+./scripts/run-smoke-tests.sh local              # Local mode
 
 # UAT
-ENVIRONMENT=uat ./scripts/run-smoke-tests.sh
+ENVIRONMENT=uat ./scripts/run-smoke-tests.sh cloud
+ENVIRONMENT=uat ./scripts/run-smoke-tests.sh local
 
 # Production
-ENVIRONMENT=prod ./scripts/run-functional-tests.sh
+ENVIRONMENT=prod ./scripts/run-functional-tests.sh cloud
+ENVIRONMENT=prod ./scripts/run-functional-tests.sh local
 
 # Run all tests on UAT
-ENVIRONMENT=uat ./scripts/run-all-tests.sh
+ENVIRONMENT=uat ./scripts/run-all-tests.sh cloud
+ENVIRONMENT=uat ./scripts/run-all-tests.sh local
 ```
 
 #### **Using Direct K6 Commands**
@@ -496,7 +551,12 @@ wait  # Wait for all to complete
 ### **With Cloud Output** (if you have Grafana Cloud)
 
 ```bash
+# Direct k6 with cloud output
 k6 run --out cloud tests/smoke/smoke-test.js
+
+# Or use the shell scripts (recommended)
+./scripts/run-smoke-tests.sh local    # Local execution with cloud streaming
+./scripts/run-smoke-tests.sh cloud    # Direct cloud execution
 ```
 
 ### **With Multiple Outputs**
@@ -560,21 +620,27 @@ rm -rf reports/*
 
 ### **Common Commands**
 
-| Task                          | Command                                                    |
-| ----------------------------- | ---------------------------------------------------------- |
-| Run smoke test (with reports) | `./scripts/run-smoke-tests.sh`                             |
-| Run smoke test (quick)        | `k6 run tests/smoke/smoke-test.js`                         |
-| Run mix scenario tests        | `./scripts/run-distribution-tests.sh`                      |
-| Run mix test (quick)          | `k6 run tests/mix/mix-scenario-weighted.js`                |
-| Run functional tests          | `./scripts/run-functional-tests.sh`                        |
-| Run all tests                 | `./scripts/run-all-tests.sh`                               |
-| Clean reports                 | `./scripts/clean-reports.sh`                               |
-| Override VUs                  | `k6 run --vus 10 tests/smoke/smoke-test.js`                |
-| Override duration             | `k6 run --duration 30s tests/smoke/smoke-test.js`          |
-| Run on UAT environment        | `ENVIRONMENT=uat ./scripts/run-smoke-tests.sh`             |
-| Run on PROD environment       | `ENVIRONMENT=prod ./scripts/run-smoke-tests.sh`            |
-| Custom BASE_URL               | `BASE_URL=https://custom.url ./scripts/run-smoke-tests.sh` |
-| Check exit code               | `./scripts/run-smoke-tests.sh; echo $?`                    |
+| Task                           | Command                                                                             |
+| ------------------------------ | ----------------------------------------------------------------------------------- |
+| Run smoke test (cloud)         | `./scripts/run-smoke-tests.sh`                                                      |
+| Run smoke test (local)         | `./scripts/run-smoke-tests.sh local`                                                |
+| Run smoke test (quick)         | `k6 run tests/smoke/smoke-test.js`                                                  |
+| Run mix scenario tests (cloud) | `./scripts/run-distribution-tests.sh`                                               |
+| Run mix scenario tests (local) | `./scripts/run-distribution-tests.sh local`                                         |
+| Run mix test (quick)           | `k6 run tests/mix/mix-scenario-weighted.js`                                         |
+| Run mix test (cloud)           | `DISTRIBUTION_PROFILE=ecommerce k6 cloud tests/mix/mix-scenario-weighted.js`        |
+| Run mix test (local)           | `DISTRIBUTION_PROFILE=ecommerce k6 run -o cloud tests/mix/mix-scenario-weighted.js` |
+| Run functional tests (cloud)   | `./scripts/run-functional-tests.sh`                                                 |
+| Run functional tests (local)   | `./scripts/run-functional-tests.sh local`                                           |
+| Run all tests (cloud)          | `./scripts/run-all-tests.sh`                                                        |
+| Run all tests (local)          | `./scripts/run-all-tests.sh local`                                                  |
+| Clean reports                  | `./scripts/clean-reports.sh`                                                        |
+| Override VUs                   | `k6 run --vus 10 tests/smoke/smoke-test.js`                                         |
+| Override duration              | `k6 run --duration 30s tests/smoke/smoke-test.js`                                   |
+| Run on UAT environment         | `ENVIRONMENT=uat ./scripts/run-smoke-tests.sh cloud`                                |
+| Run on PROD environment        | `ENVIRONMENT=prod ./scripts/run-smoke-tests.sh local`                               |
+| Custom BASE_URL                | `BASE_URL=https://custom.url ./scripts/run-smoke-tests.sh`                          |
+| Check exit code                | `./scripts/run-smoke-tests.sh; echo $?`                                             |
 
 ### **Project Structure**
 
@@ -772,11 +838,18 @@ cat src/config/test-profiles.js
 1. **Shell Scripts** (Automation)
 
    ```bash
+   # Cloud mode (default) - runs on k6 cloud infrastructure
    ./scripts/run-smoke-tests.sh
    ./scripts/run-distribution-tests.sh
+
+   # Local mode - runs locally and streams to cloud
+   ./scripts/run-smoke-tests.sh local
+   ./scripts/run-distribution-tests.sh local
    ```
 
    - Best for: CI/CD, Production, Consistent reporting
+   - **Cloud mode**: Direct execution on k6 cloud infrastructure
+   - **Local mode**: Local execution with cloud streaming and local reports
 
 2. **Direct K6** (Quick Testing)
    ```bash
@@ -790,8 +863,11 @@ cat src/config/test-profiles.js
 ✅ Shell scripts (`.sh`) are wrappers that run k6 internally  
 ✅ K6 test files (`.js`) contain the actual test logic  
 ✅ Use `./scripts/` for automation, `k6 run` for development  
-✅ Reports are generated automatically by shell scripts  
-✅ Both methods return proper exit codes for CI/CD
+✅ **Cloud mode** (default): Runs directly on k6 cloud infrastructure  
+✅ **Local mode**: Runs locally, streams to cloud, generates local reports  
+✅ Reports are generated automatically by shell scripts in local mode  
+✅ Both methods return proper exit codes for CI/CD  
+✅ Project ID is managed centrally in `config-manager.js`
 
 ---
 

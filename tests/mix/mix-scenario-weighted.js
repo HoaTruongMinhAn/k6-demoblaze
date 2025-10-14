@@ -30,15 +30,28 @@ import { preActionDelay, betweenActionDelay } from "../../src/utils/timing.js";
  * - Distribution profile can be set via DISTRIBUTION_PROFILE environment variable
  * - Defaults to 'auth_basic' profile (20% signup, 20% login, 60% signup+login)
  * - Available profiles: auth_basic, ecommerce, high_conversion, browse_heavy, load_test
+ * - Run mode can be set via RUN_MODE environment variable (local|cloud)
+ * - Defaults to 'cloud' mode for direct k6 cloud execution
  *
  * Usage:
- * DISTRIBUTION_PROFILE=ecommerce k6 run mix-scenario-weighted.js
+ * # Cloud mode (default) - runs on k6 cloud infrastructure
+ * DISTRIBUTION_PROFILE=ecommerce k6 cloud mix-scenario-weighted.js
+ *
+ * # Local mode - runs locally and streams to cloud
+ * DISTRIBUTION_PROFILE=ecommerce k6 run -o cloud mix-scenario-weighted.js
+ *
+ * # Via run-distribution-tests.sh (recommended)
+ * ./scripts/run-distribution-tests.sh cloud ecommerce
+ * ./scripts/run-distribution-tests.sh local ecommerce
  */
 
 // Get test profile and distribution profile
 const mixProfile = getTestProfile("mix");
 const distributionProfileName = __ENV.DISTRIBUTION_PROFILE || "auth_basic";
 const distributionProfile = getDistributionProfile(distributionProfileName);
+
+// Get run mode (local|cloud) - defaults to cloud for direct k6 cloud execution
+const runMode = __ENV.RUN_MODE || "cloud";
 
 // Override VU and duration from environment variables if provided
 const vus = __ENV.VUS ? parseInt(__ENV.VUS) : mixProfile.vus;
@@ -49,7 +62,8 @@ export const options = generateScenariosConfig(
   distributionProfile,
   vus,
   duration,
-  mixProfile.thresholds
+  mixProfile.thresholds,
+  mixProfile.cloud
 );
 
 /**
@@ -148,6 +162,7 @@ export function viewCart() {
  */
 export function setup() {
   console.log("=== Mix Scenario Test Setup (Dynamic Weighted) ===");
+  console.log(`Run Mode: ${runMode}`);
   console.log(`Distribution Profile: ${distributionProfileName}`);
   console.log(`Total VUs: ${mixProfile.vus}`);
   console.log(`Duration: ${mixProfile.duration}`);
@@ -178,9 +193,24 @@ export function setup() {
   console.log("  browse_heavy: Users mostly browsing");
   console.log("  load_test: Equal distribution for stress testing");
   console.log("");
+  console.log("Run Modes:");
+  console.log("  cloud: Runs directly on k6 cloud infrastructure (default)");
+  console.log("  local: Runs locally and streams output to cloud");
+  console.log("");
+  console.log("Usage Examples:");
   console.log(
-    `Usage: DISTRIBUTION_PROFILE=${distributionProfileName} k6 run mix-scenario-weighted.js`
+    `  # Cloud mode: DISTRIBUTION_PROFILE=${distributionProfileName} k6 cloud mix-scenario-weighted.js`
   );
+  console.log(
+    `  # Local mode: DISTRIBUTION_PROFILE=${distributionProfileName} k6 run -o cloud mix-scenario-weighted.js`
+  );
+  console.log(
+    "  # Via script (recommended): ./scripts/run-distribution-tests.sh cloud ecommerce"
+  );
+  console.log(
+    "  # Via script (local): ./scripts/run-distribution-tests.sh local ecommerce"
+  );
+  console.log("");
   console.log(
     "Available profiles: auth_basic, ecommerce, high_conversion, browse_heavy, load_test"
   );
