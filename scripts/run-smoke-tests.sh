@@ -53,7 +53,7 @@ elif [ "$RUN_MODE" = "cloud" ]; then
   echo "Project ID will be read from smoke-test.js configuration"
   echo ""
   
-  TEST_PROFILE=$TEST_PROFILE RUN_MODE=$RUN_MODE k6 cloud tests/smoke/smoke-test.js
+  TEST_PROFILE=$TEST_PROFILE RUN_MODE=$RUN_MODE /opt/homebrew/bin/k6 cloud tests/smoke/smoke-test.js
   
 else
   echo "❌ Invalid run mode: $RUN_MODE"
