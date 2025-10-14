@@ -27,26 +27,34 @@ import { preActionDelay, betweenActionDelay } from "../../src/utils/timing.js";
  * of different user behavior patterns without hardcoding percentages.
  *
  * Configuration:
+ * - Test profile can be set via TEST_PROFILE environment variable
+ * - Defaults to 'mix' profile for mixed user behavior testing
+ * - Available test profiles: smoke, functional, load, stress, spike, mix
  * - Distribution profile can be set via DISTRIBUTION_PROFILE environment variable
  * - Defaults to 'auth_basic' profile (20% signup, 20% login, 60% signup+login)
- * - Available profiles: auth_basic, ecommerce, high_conversion, browse_heavy, load_test
+ * - Available distribution profiles: auth_basic, ecommerce, high_conversion, browse_heavy, load_test
  * - Run mode can be set via RUN_MODE environment variable (local|cloud)
  * - Defaults to 'cloud' mode for direct k6 cloud execution
  *
  * Usage:
- * # Cloud mode (default) - runs on k6 cloud infrastructure
+ * # Cloud mode (default) with mix profile
  * DISTRIBUTION_PROFILE=ecommerce k6 cloud mix-scenario-weighted.js
  *
- * # Local mode - runs locally and streams to cloud
+ * # Local mode with mix profile
  * DISTRIBUTION_PROFILE=ecommerce k6 run -o cloud mix-scenario-weighted.js
+ *
+ * # Cloud mode with specific test profile
+ * TEST_PROFILE=load DISTRIBUTION_PROFILE=ecommerce k6 cloud mix-scenario-weighted.js
+ * TEST_PROFILE=stress DISTRIBUTION_PROFILE=ecommerce k6 run -o cloud mix-scenario-weighted.js
  *
  * # Via run-distribution-tests.sh (recommended)
  * ./scripts/run-distribution-tests.sh cloud ecommerce
  * ./scripts/run-distribution-tests.sh local ecommerce
  */
 
-// Get test profile and distribution profile
-const mixProfile = getTestProfile("mix");
+// Get test profile from environment variable or default to mix
+const testProfileName = __ENV.TEST_PROFILE || "mix";
+const testProfile = getTestProfile(testProfileName);
 const distributionProfileName = __ENV.DISTRIBUTION_PROFILE || "auth_basic";
 const distributionProfile = getDistributionProfile(distributionProfileName);
 
@@ -54,16 +62,16 @@ const distributionProfile = getDistributionProfile(distributionProfileName);
 const runMode = __ENV.RUN_MODE || "cloud";
 
 // Override VU and duration from environment variables if provided
-const vus = __ENV.VUS ? parseInt(__ENV.VUS) : mixProfile.vus;
-const duration = __ENV.DURATION || mixProfile.duration;
+const vus = __ENV.VUS ? parseInt(__ENV.VUS) : testProfile.vus;
+const duration = __ENV.DURATION || testProfile.duration;
 
 // Generate dynamic scenarios configuration
 export const options = generateScenariosConfig(
   distributionProfile,
   vus,
   duration,
-  mixProfile.thresholds,
-  mixProfile.cloud
+  testProfile.thresholds,
+  testProfile.cloud
 );
 
 /**
@@ -162,29 +170,38 @@ export function viewCart() {
  */
 export function setup() {
   console.log("=== Mix Scenario Test Setup (Dynamic Weighted) ===");
+  console.log(`Test Profile: ${testProfileName}`);
   console.log(`Run Mode: ${runMode}`);
   console.log(`Distribution Profile: ${distributionProfileName}`);
-  console.log(`Total VUs: ${mixProfile.vus}`);
-  console.log(`Duration: ${mixProfile.duration}`);
+  console.log(`Total VUs: ${testProfile.vus}`);
+  console.log(`Duration: ${testProfile.duration}`);
   console.log("");
 
   // Calculate and display VU distribution
   const vusDistribution = calculateVUDistribution(
     distributionProfile,
-    mixProfile.vus
+    testProfile.vus
   );
 
   console.log("VU Distribution:");
   Object.entries(distributionProfile.scenarios).forEach(
     ([scenarioName, scenarioConfig]) => {
       const vus = vusDistribution[scenarioName];
-      const percentage = ((vus / mixProfile.vus) * 100).toFixed(1);
+      const percentage = ((vus / testProfile.vus) * 100).toFixed(1);
       console.log(
         `  ${scenarioName}: ${vus} VUs (${percentage}%) - ${scenarioConfig.description}`
       );
     }
   );
 
+  console.log("");
+  console.log("Available Test Profiles:");
+  console.log("  smoke: Quick validation (1 VU, 1 iteration)");
+  console.log("  functional: Business workflow validation (2 VUs, 5s)");
+  console.log("  load: Expected production load (3 VUs, 10s)");
+  console.log("  stress: Beyond expected load (4 VUs, 10s)");
+  console.log("  spike: Sudden traffic spike (5 VUs, 3s)");
+  console.log("  mix: Mixed user behavior (5 VUs, 5s) - current default");
   console.log("");
   console.log("Available Distribution Profiles:");
   console.log("  auth_basic: Basic authentication flow (current default)");
@@ -199,10 +216,13 @@ export function setup() {
   console.log("");
   console.log("Usage Examples:");
   console.log(
-    `  # Cloud mode: DISTRIBUTION_PROFILE=${distributionProfileName} k6 cloud mix-scenario-weighted.js`
+    `  # Current profile: TEST_PROFILE=${testProfileName} DISTRIBUTION_PROFILE=${distributionProfileName} k6 cloud mix-scenario-weighted.js`
   );
   console.log(
-    `  # Local mode: DISTRIBUTION_PROFILE=${distributionProfileName} k6 run -o cloud mix-scenario-weighted.js`
+    `  # Different test profile: TEST_PROFILE=load DISTRIBUTION_PROFILE=${distributionProfileName} k6 cloud mix-scenario-weighted.js`
+  );
+  console.log(
+    `  # Local mode: TEST_PROFILE=${testProfileName} DISTRIBUTION_PROFILE=${distributionProfileName} k6 run -o cloud mix-scenario-weighted.js`
   );
   console.log(
     "  # Via script (recommended): ./scripts/run-distribution-tests.sh cloud ecommerce"
@@ -212,7 +232,10 @@ export function setup() {
   );
   console.log("");
   console.log(
-    "Available profiles: auth_basic, ecommerce, high_conversion, browse_heavy, load_test"
+    "Available test profiles: smoke, functional, load, stress, spike, mix"
+  );
+  console.log(
+    "Available distribution profiles: auth_basic, ecommerce, high_conversion, browse_heavy, load_test"
   );
 }
 

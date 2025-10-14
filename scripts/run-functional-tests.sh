@@ -5,11 +5,13 @@
 # Runs all functional tests with their configured profiles
 #
 # Usage:
-#   ./scripts/run-functional-tests.sh [local|cloud]
+#   ./scripts/run-functional-tests.sh [local|cloud] [profile]
 #   
 # Options:
 #   local  - Run locally and stream output to cloud
 #   cloud  - Run directly on k6 cloud infrastructure (default)
+#   profile - Test profile to use (smoke, functional, load, stress, spike, mix)
+#            Defaults to 'functional'
 #
 # Available Tests:
 #   - auth/signup.js         : User registration test
@@ -28,9 +30,10 @@
 
 # Parse command line arguments
 RUN_MODE=${1:-cloud}
+TEST_PROFILE=${2:-"functional"}
 
 echo "======================================"
-echo "Running Functional Tests - Mode: $RUN_MODE"
+echo "Running Functional Tests - Mode: $RUN_MODE - Profile: $TEST_PROFILE"
 echo "======================================"
 echo ""
 
@@ -90,25 +93,29 @@ for test_file in "${test_files[@]}"; do
       --out json="reports/${test_name}-results.json" \
       --summary-export="reports/${test_name}-summary.json" \
       -o cloud \
+      --env TEST_PROFILE=$TEST_PROFILE \
+      --env RUN_MODE=$RUN_MODE \
       "$test_file"
   elif [ "$RUN_MODE" = "cloud" ]; then
-    k6 cloud "$test_file"
+    TEST_PROFILE=$TEST_PROFILE RUN_MODE=$RUN_MODE k6 cloud "$test_file"
   else
     echo "❌ Invalid run mode: $RUN_MODE"
     echo ""
-    echo "Usage: $0 [local|cloud]"
+    echo "Usage: $0 [local|cloud] [profile]"
     echo ""
     echo "Options:"
     echo "  local  - Run locally and stream output to cloud"
     echo "  cloud  - Run directly on k6 cloud infrastructure (default)"
+    echo "  profile - Test profile to use (smoke, functional, load, stress, spike, mix)"
+    echo "           Defaults to 'functional'"
     exit 1
   fi
   
   if [ $? -eq 0 ]; then
-    echo "✅ $test_name PASSED"
+    echo "✅ PASSED: $test_name"
     ((success_count++))
   else
-    echo "❌ $test_name FAILED"
+    echo "❌ FAILED: $test_name"
     failed_tests+=("$test_name")
   fi
 done
@@ -120,7 +127,7 @@ echo "======================================"
 echo "✅ Passed: $success_count/$total_tests"
 
 if [ ${#failed_tests[@]} -gt 0 ]; then
-  echo "❌ Failed: ${#failed_tests[@]} (${failed_tests[*]})"
+  echo "❌ Failed: ${#failed_tests[@]} tests"
   echo ""
   echo "Failed tests:"
   for failed_test in "${failed_tests[@]}"; do
@@ -133,4 +140,3 @@ else
   echo "✅ All tests passed!"
 fi
 echo "======================================"
-

@@ -14,35 +14,61 @@ import { betweenActionDelay } from "../../src/utils/timing.js";
  * Duration: Short (typically < 1 minute)
  * Load: Minimal (1-2 VUs)
  *
- * Checks:
- * - Configuration is valid
- * - Main page loads successfully
- * - Critical functionality works
+ * Configuration:
+ * - Test profile can be set via TEST_PROFILE environment variable
+ * - Defaults to 'smoke' profile for quick validation
+ * - Available profiles: smoke, functional, load, stress, spike, mix
+ * - Run mode can be set via RUN_MODE environment variable (local|cloud)
+ * - Defaults to 'cloud' mode for direct k6 cloud execution
+ *
+ * Usage:
+ * # Default smoke profile
+ * k6 cloud tests/smoke/smoke-test.js
+ *
+ * # Specific test profile
+ * TEST_PROFILE=load k6 cloud tests/smoke/smoke-test.js
+ * TEST_PROFILE=stress k6 run -o cloud tests/smoke/smoke-test.js
+ *
+ * # Via run-smoke-tests.sh (recommended)
+ * ./scripts/run-smoke-tests.sh cloud
+ * ./scripts/run-smoke-tests.sh local
  */
 
-// Load smoke test profile from test-profiles configuration
-const smokeProfile = getTestProfile("smoke");
+// Get test profile from environment variable or default to smoke
+const testProfileName = __ENV.TEST_PROFILE || "smoke";
+const testProfile = getTestProfile(testProfileName);
+
+// Get run mode (local|cloud) - defaults to cloud for direct k6 cloud execution
+const runMode = __ENV.RUN_MODE || "cloud";
 
 export const options = {
-  vus: smokeProfile.vus,
-  iterations: smokeProfile.iterations,
-  thresholds: smokeProfile.thresholds,
+  vus: testProfile.vus,
+  iterations: testProfile.iterations,
+  duration: testProfile.duration,
+  thresholds: testProfile.thresholds,
   cloud: {
-    projectID: smokeProfile.cloud.projectID,
+    projectID: testProfile.cloud.projectID,
   },
   tags: {
-    test_type: "smoke",
+    test_type: testProfileName,
     feature: "system_health",
   },
 };
 
 export function setup() {
   configManager.validate();
-  configManager.logProfile(smokeProfile);
+  configManager.logProfile(testProfile);
+
+  console.log("=== Test Configuration ===");
+  console.log(`Test Profile: ${testProfileName}`);
+  console.log(`Run Mode: ${runMode}`);
+  console.log(`VUs: ${testProfile.vus}`);
+  console.log(`Iterations: ${testProfile.iterations}`);
+  console.log(`Duration: ${testProfile.duration}`);
 }
 
 export default function () {
-  console.log("=== Starting Smoke Test ===");
+  console.log(`=== Starting ${testProfileName.toUpperCase()} Test ===`);
 
   const landingUrl = configManager.getWebUrl("LANDING");
   console.log(`Landing URL: ${landingUrl}`);
@@ -67,14 +93,14 @@ export default function () {
     }) && loginResult.validationPassed;
 
   if (checkLandingPass && checkLoginPass) {
-    console.log("✅ Smoke test passed");
+    console.log(`✅ ${testProfileName} test passed`);
   } else {
-    console.log("❌ Smoke test failed");
+    console.log(`❌ ${testProfileName} test failed`);
   }
 
   betweenActionDelay();
 }
 
 export function teardown(data) {
-  console.log("=== Smoke Test Complete ===");
+  console.log(`=== ${testProfileName.toUpperCase()} Test Complete ===`);
 }

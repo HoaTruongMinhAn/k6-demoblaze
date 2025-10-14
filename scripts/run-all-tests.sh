@@ -5,11 +5,13 @@
 # Runs all tests in sequence: smoke -> functional -> distribution
 #
 # Usage:
-#   ./scripts/run-all-tests.sh [local|cloud]
+#   ./scripts/run-all-tests.sh [local|cloud] [profile]
 #   
 # Options:
 #   local  - Run locally and stream output to cloud
 #   cloud  - Run directly on k6 cloud infrastructure (default)
+#   profile - Test profile to use for functional tests (smoke, functional, load, stress, spike, mix)
+#            Defaults to 'functional'
 #
 # Automatically discovers and runs all test files in:
 #   - tests/smoke/*.js
@@ -26,9 +28,10 @@
 
 # Parse command line arguments
 RUN_MODE=${1:-cloud}
+TEST_PROFILE=${2:-"functional"}
 
 echo "=========================================="
-echo "K6 Test Suite - Full Execution - Mode: $RUN_MODE"
+echo "K6 Test Suite - Full Execution - Mode: $RUN_MODE - Profile: $TEST_PROFILE"
 echo "=========================================="
 echo ""
 echo "Note: Tests use configuration from src/config/test-profiles.js"
@@ -92,7 +95,7 @@ smoke_exit_code=$?
 
 echo ""
 echo "Step 2: Running Functional Tests..."
-./scripts/run-functional-tests.sh $RUN_MODE
+./scripts/run-functional-tests.sh $RUN_MODE $TEST_PROFILE
 functional_exit_code=$?
 
 echo ""
