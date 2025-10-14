@@ -1,4 +1,3 @@
-import { configManager } from "../../../src/config/config-manager.js";
 import { loginAndValidate } from "../../../src/api/auth-api.js";
 import { getTestProfile } from "../../../src/config/test-profiles.js";
 import { getExistingUser } from "../../../src/utils/test-data.js";
@@ -25,6 +24,9 @@ export const options = {
   vus: functionalProfile.vus,
   duration: functionalProfile.duration,
   thresholds: functionalProfile.thresholds,
+  cloud: {
+    projectID: functionalProfile.cloud.projectID,
+  },
   tags: {
     test_type: "functional",
     feature: "authentication",

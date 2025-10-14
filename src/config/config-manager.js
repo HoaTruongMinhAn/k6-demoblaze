@@ -27,7 +27,7 @@ export class ConfigManager {
     const baseWebUrl = __ENV.WEB_URL || webUrls[environment] || webUrls.sit;
 
     this.config = {
-      PROJECT_ID: 999,
+      PROJECT_ID: __ENV.PROJECT_ID || 5059314,
       PROJECT_NAME: "k6-demoblaze",
       BASE_API_URL: baseApiUrl,
       BASE_WEB_URL: baseWebUrl,
@@ -87,6 +87,7 @@ export class ConfigManager {
     return {
       id: this.config.PROJECT_ID,
       name: this.config.PROJECT_NAME,
+      projectId: this.config.PROJECT_ID,
       environment: this.config.ENVIRONMENT,
       baseApiUrl: this.config.BASE_API_URL,
       baseWebUrl: this.config.BASE_WEB_URL,
@@ -125,6 +126,7 @@ export class ConfigManager {
    */
   getTestOptions() {
     return {
+      projectId: this.config.PROJECT_ID,
       vus: this.config.VUS,
       iterations: this.config.ITERATIONS,
       duration: this.config.DURATION,

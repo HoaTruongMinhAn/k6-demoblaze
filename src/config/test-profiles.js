@@ -1,3 +1,5 @@
+import { configManager } from "./config-manager.js";
+
 /**
  * Test Profiles Configuration
  *
@@ -17,23 +19,26 @@
  * - duration: How long the test should run
  * - thresholds: Performance criteria that must be met
  *
- * @type {Object.<string, {vus: number, duration: string, thresholds: Object}>}
+ * @type {Object.<string, {projectId: number, vus: number, duration: string, thresholds: Object}>}
  */
 export const TEST_PROFILES = {
   /** Quick validation - Minimal load to verify system is functional */
   smoke: {
     vus: 1,
     iterations: 1,
-    // duration: "5s",
     thresholds: {
       http_req_duration: ["p(95)<1000"], // 95% of requests under 1s
       http_req_failed: ["rate<0.05"], // Less than 5% errors
       checks: ["rate>0.95"], // More than 95% checks pass
     },
+    cloud: {
+      projectID: configManager.getProjectInfo().projectId,
+    },
   },
 
   /** Business workflow validation - Low load for testing features */
   functional: {
+    projectId: configManager.getProjectInfo().projectId,
     vus: 2,
     duration: "5s",
     thresholds: {
@@ -41,10 +46,14 @@ export const TEST_PROFILES = {
       http_req_failed: ["rate<0.01"], // Less than 1% errors
       checks: ["rate>0.95"], // More than 95% checks pass
     },
+    cloud: {
+      projectID: configManager.getProjectInfo().projectId,
+    },
   },
 
   /** Expected production load - Simulate normal traffic patterns */
   load: {
+    projectId: configManager.getProjectInfo().projectId,
     vus: 3,
     duration: "10s",
     thresholds: {
@@ -52,10 +61,14 @@ export const TEST_PROFILES = {
       http_req_failed: ["rate<0.05"], // Up to 5% errors acceptable
       checks: ["rate>0.90"], // 90% checks pass
     },
+    cloud: {
+      projectID: configManager.getProjectInfo().projectId,
+    },
   },
 
   /** Beyond expected load - Push system to find breaking points */
   stress: {
+    projectId: configManager.getProjectInfo().projectId,
     vus: 4,
     duration: "10s",
     thresholds: {
@@ -63,10 +76,14 @@ export const TEST_PROFILES = {
       http_req_failed: ["rate<0.10"], // Up to 10% errors expected
       checks: ["rate>0.80"], // 80% checks pass
     },
+    cloud: {
+      projectID: configManager.getProjectInfo().projectId,
+    },
   },
 
   /** Sudden traffic spike - Test system behavior under rapid load increase */
   spike: {
+    projectId: configManager.getProjectInfo().projectId,
     vus: 5,
     duration: "3s",
     thresholds: {
@@ -74,16 +91,23 @@ export const TEST_PROFILES = {
       http_req_failed: ["rate<0.10"], // Some failures expected during spike
       checks: ["rate>0.85"], // 85% checks pass
     },
+    cloud: {
+      projectID: configManager.getProjectInfo().projectId,
+    },
   },
 
   /** Mixed user behavior - Realistic traffic patterns with different user flows */
   mix: {
+    projectId: configManager.getProjectInfo().projectId,
     vus: 5,
     duration: "5s",
     thresholds: {
       http_req_duration: ["p(95)<2000", "p(99)<3000"], // Balanced performance expectations
       http_req_failed: ["rate<0.05"], // Up to 5% errors acceptable
       checks: ["rate>0.90"], // 90% checks pass
+    },
+    cloud: {
+      projectID: configManager.getProjectInfo().projectId,
     },
   },
 };

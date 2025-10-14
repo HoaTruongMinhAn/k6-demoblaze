@@ -27,6 +27,9 @@ export const options = {
   vus: smokeProfile.vus,
   iterations: smokeProfile.iterations,
   thresholds: smokeProfile.thresholds,
+  cloud: {
+    projectID: smokeProfile.cloud.projectID,
+  },
   tags: {
     test_type: "smoke",
     feature: "system_health",

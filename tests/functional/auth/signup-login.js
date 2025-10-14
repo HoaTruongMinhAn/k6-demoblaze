@@ -24,6 +24,9 @@ export const options = {
   vus: functionalProfile.vus,
   duration: functionalProfile.duration,
   thresholds: functionalProfile.thresholds,
+  cloud: {
+    projectID: functionalProfile.cloud.projectID,
+  },
   tags: {
     test_type: "functional",
     feature: "authentication",
