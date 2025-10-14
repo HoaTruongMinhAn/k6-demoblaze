@@ -12,6 +12,13 @@ import { configManager } from "./config-manager.js";
  */
 
 /**
+ * Get project ID lazily to avoid circular dependency issues
+ */
+function getProjectId() {
+  return configManager.getProjectInfo().projectId;
+}
+
+/**
  * Test execution profiles for different test types
  *
  * Each profile defines:
@@ -24,6 +31,9 @@ import { configManager } from "./config-manager.js";
 export const TEST_PROFILES = {
   /** Quick validation - Minimal load to verify system is functional */
   smoke: {
+    get projectId() {
+      return getProjectId();
+    },
     vus: 1,
     iterations: 1,
     thresholds: {
@@ -31,14 +41,18 @@ export const TEST_PROFILES = {
       http_req_failed: ["rate<0.05"], // Less than 5% errors
       checks: ["rate>0.95"], // More than 95% checks pass
     },
-    cloud: {
-      projectID: configManager.getProjectInfo().projectId,
+    get cloud() {
+      return {
+        projectID: getProjectId(),
+      };
     },
   },
 
   /** Business workflow validation - Low load for testing features */
   functional: {
-    projectId: configManager.getProjectInfo().projectId,
+    get projectId() {
+      return getProjectId();
+    },
     vus: 2,
     duration: "5s",
     thresholds: {
@@ -46,14 +60,18 @@ export const TEST_PROFILES = {
       http_req_failed: ["rate<0.01"], // Less than 1% errors
       checks: ["rate>0.95"], // More than 95% checks pass
     },
-    cloud: {
-      projectID: configManager.getProjectInfo().projectId,
+    get cloud() {
+      return {
+        projectID: getProjectId(),
+      };
     },
   },
 
   /** Expected production load - Simulate normal traffic patterns */
   load: {
-    projectId: configManager.getProjectInfo().projectId,
+    get projectId() {
+      return getProjectId();
+    },
     vus: 3,
     duration: "10s",
     thresholds: {
@@ -61,14 +79,18 @@ export const TEST_PROFILES = {
       http_req_failed: ["rate<0.05"], // Up to 5% errors acceptable
       checks: ["rate>0.90"], // 90% checks pass
     },
-    cloud: {
-      projectID: configManager.getProjectInfo().projectId,
+    get cloud() {
+      return {
+        projectID: getProjectId(),
+      };
     },
   },
 
   /** Beyond expected load - Push system to find breaking points */
   stress: {
-    projectId: configManager.getProjectInfo().projectId,
+    get projectId() {
+      return getProjectId();
+    },
     vus: 4,
     duration: "10s",
     thresholds: {
@@ -76,14 +98,18 @@ export const TEST_PROFILES = {
       http_req_failed: ["rate<0.10"], // Up to 10% errors expected
       checks: ["rate>0.80"], // 80% checks pass
     },
-    cloud: {
-      projectID: configManager.getProjectInfo().projectId,
+    get cloud() {
+      return {
+        projectID: getProjectId(),
+      };
     },
   },
 
   /** Sudden traffic spike - Test system behavior under rapid load increase */
   spike: {
-    projectId: configManager.getProjectInfo().projectId,
+    get projectId() {
+      return getProjectId();
+    },
     vus: 5,
     duration: "3s",
     thresholds: {
@@ -91,14 +117,18 @@ export const TEST_PROFILES = {
       http_req_failed: ["rate<0.10"], // Some failures expected during spike
       checks: ["rate>0.85"], // 85% checks pass
     },
-    cloud: {
-      projectID: configManager.getProjectInfo().projectId,
+    get cloud() {
+      return {
+        projectID: getProjectId(),
+      };
     },
   },
 
   /** Mixed user behavior - Realistic traffic patterns with different user flows */
   mix: {
-    projectId: configManager.getProjectInfo().projectId,
+    get projectId() {
+      return getProjectId();
+    },
     vus: 5,
     duration: "5s",
     thresholds: {
@@ -106,8 +136,10 @@ export const TEST_PROFILES = {
       http_req_failed: ["rate<0.05"], // Up to 5% errors acceptable
       checks: ["rate>0.90"], // 90% checks pass
     },
-    cloud: {
-      projectID: configManager.getProjectInfo().projectId,
+    get cloud() {
+      return {
+        projectID: getProjectId(),
+      };
     },
   },
 };

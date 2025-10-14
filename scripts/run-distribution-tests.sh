@@ -4,14 +4,16 @@
 # Runs realistic user behavior simulation with configurable distribution profiles
 # 
 # Usage:
-#   ./scripts/run-distribution-tests.sh [local|cloud] [profile]                    # Run all profiles with default settings
-#   ./scripts/run-distribution-tests.sh [local|cloud] ecommerce                    # Run specific profile
+#   ./scripts/run-distribution-tests.sh [local|cloud] [distribution_profile] [test_profile]
+#   ./scripts/run-distribution-tests.sh [local|cloud] ecommerce load              # Run specific profiles
 #   VUS=10 DURATION=30s ./scripts/run-distribution-tests.sh [local|cloud]          # Run with custom VUs and duration
 #   TEST_FILE=basic ./scripts/run-distribution-tests.sh [local|cloud]              # Run different test file
 #
 # Options:
 #   local  - Run locally and stream output to cloud
 #   cloud  - Run directly on k6 cloud infrastructure (default)
+#   distribution_profile - Distribution profile (ecommerce, auth_basic, etc.)
+#   test_profile - Test profile (smoke, functional, load, stress, spike, mix)
 #
 # Available test files:
 #   - weighted (default): Dynamic distribution with configurable profiles
@@ -31,7 +33,8 @@ NC='\033[0m' # No Color
 
 # Parse command line arguments
 RUN_MODE=${1:-cloud}
-PROFILE_ARG=${2:-""}
+DISTRIBUTION_PROFILE_ARG=${2:-""}
+TEST_PROFILE_ARG=${3:-"mix"}
 
 # Default values
 ENVIRONMENT=${ENVIRONMENT:-"sit"}
@@ -39,7 +42,16 @@ VUS=${VUS:-5}
 DURATION=${DURATION:-10s}
 OUTPUT_DIR=${OUTPUT_DIR:-"reports"}
 TEST_FILE=${TEST_FILE:-"weighted"}
-PROFILE=${DISTRIBUTION_PROFILE:-ecommerce}
+DISTRIBUTION_PROFILE=${DISTRIBUTION_PROFILE:-ecommerce}
+TEST_PROFILE=${TEST_PROFILE:-mix}
+
+# Override with command line arguments if provided
+if [ "$DISTRIBUTION_PROFILE_ARG" != "" ]; then
+    DISTRIBUTION_PROFILE=$DISTRIBUTION_PROFILE_ARG
+fi
+if [ "$TEST_PROFILE_ARG" != "" ]; then
+    TEST_PROFILE=$TEST_PROFILE_ARG
+fi
 
 echo -e "${BLUE}=== Dynamic Distribution Test Runner - Mode: ${RUN_MODE} ===${NC}"
 echo -e "Environment: ${YELLOW}${ENVIRONMENT}${NC}"
@@ -47,7 +59,8 @@ echo -e "VUs: ${YELLOW}${VUS}${NC}"
 echo -e "Duration: ${YELLOW}${DURATION}${NC}"
 echo -e "Output Directory: ${YELLOW}${OUTPUT_DIR}${NC}"
 echo -e "Test File: ${YELLOW}${TEST_FILE}${NC}"
-echo -e "Profile: ${YELLOW}${PROFILE}${NC}"
+echo -e "Distribution Profile: ${YELLOW}${DISTRIBUTION_PROFILE}${NC}"
+echo -e "Test Profile: ${YELLOW}${TEST_PROFILE}${NC}"
 echo ""
 
 # Create output directory if it doesn't exist
@@ -101,6 +114,7 @@ run_test() {
         k6_cmd="${k6_cmd} --env VUS=${VUS}"
         k6_cmd="${k6_cmd} --env DURATION=${DURATION}"
         k6_cmd="${k6_cmd} --env RUN_MODE=${RUN_MODE}"
+        k6_cmd="${k6_cmd} --env TEST_PROFILE=${TEST_PROFILE}"
         
         # Add VUs and duration as CLI args only for non-weighted tests
         # Weighted tests use environment variables for configuration
@@ -118,7 +132,7 @@ run_test() {
         k6_cmd="k6 cloud"
         
         # Add environment variables for cloud execution
-        k6_cmd="ENVIRONMENT=${ENVIRONMENT} VUS=${VUS} DURATION=${DURATION} RUN_MODE=${RUN_MODE} ${k6_cmd}"
+        k6_cmd="ENVIRONMENT=${ENVIRONMENT} VUS=${VUS} DURATION=${DURATION} RUN_MODE=${RUN_MODE} TEST_PROFILE=${TEST_PROFILE} ${k6_cmd}"
         
     else
         echo -e "${RED}❌ Invalid run mode: $RUN_MODE${NC}"
@@ -217,11 +231,11 @@ profile_exists() {
     return 1
 }
 
-# If specific profile requested, run only that one
-if [ "$PROFILE_ARG" != "" ]; then
-    if profile_exists "$PROFILE_ARG"; then
-        description=$(get_profile_description "$PROFILE_ARG")
-        run_test "$PROFILE_ARG" "$description"
+# If specific distribution profile requested, run only that one
+if [ "$DISTRIBUTION_PROFILE_ARG" != "" ]; then
+    if profile_exists "$DISTRIBUTION_PROFILE_ARG"; then
+        description=$(get_profile_description "$DISTRIBUTION_PROFILE_ARG")
+        run_test "$DISTRIBUTION_PROFILE_ARG" "$description"
         
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}✅ Single profile test completed successfully!${NC}"
@@ -232,8 +246,8 @@ if [ "$PROFILE_ARG" != "" ]; then
             exit 1
         fi
     else
-        echo -e "${RED}Error: Unknown profile '$PROFILE_ARG'${NC}"
-        echo "Available profiles:"
+        echo -e "${RED}Error: Unknown distribution profile '$DISTRIBUTION_PROFILE_ARG'${NC}"
+        echo "Available distribution profiles:"
         for profile in "${profiles[@]}"; do
             description=$(get_profile_description "$profile")
             echo "  - $profile: $description"
@@ -273,31 +287,44 @@ fi
 
 echo ""
 echo -e "${BLUE}Usage Examples:${NC}"
-echo "  # Run all profiles with default settings (cloud mode)"
+echo "  # Run all profiles with default settings (cloud mode, mix test profile)"
 echo "  ./scripts/run-distribution-tests.sh"
 echo "  ./scripts/run-distribution-tests.sh cloud"
 echo ""
-echo "  # Run all profiles in local mode"
+echo "  # Run all profiles in local mode with mix test profile"
 echo "  ./scripts/run-distribution-tests.sh local"
 echo ""
-echo "  # Run specific profile"
+echo "  # Run specific distribution profile with mix test profile"
 echo "  ./scripts/run-distribution-tests.sh cloud ecommerce"
 echo "  ./scripts/run-distribution-tests.sh local ecommerce"
 echo ""
+echo "  # Run with specific test profile"
+echo "  ./scripts/run-distribution-tests.sh cloud ecommerce load"
+echo "  ./scripts/run-distribution-tests.sh local ecommerce stress"
+echo "  ./scripts/run-distribution-tests.sh cloud ecommerce functional"
+echo ""
 echo "  # Run with custom VUs and duration"
-echo "  VUS=10 DURATION=30s ./scripts/run-distribution-tests.sh cloud high_conversion"
+echo "  VUS=10 DURATION=30s ./scripts/run-distribution-tests.sh cloud high_conversion load"
 echo ""
 echo "  # Run with different test file"
-echo "  TEST_FILE=basic ./scripts/run-distribution-tests.sh local auth_basic"
+echo "  TEST_FILE=basic ./scripts/run-distribution-tests.sh local auth_basic stress"
 echo ""
 echo "  # Run with custom environment and output directory"
-echo "  ENVIRONMENT=uat OUTPUT_DIR=custom-reports ./scripts/run-distribution-tests.sh local"
+echo "  ENVIRONMENT=uat OUTPUT_DIR=custom-reports ./scripts/run-distribution-tests.sh local ecommerce load"
 echo ""
 echo -e "${BLUE}Available Test Files:${NC}"
 echo "  - weighted (default): Dynamic distribution with configurable profiles"
 echo "  - basic: Simple approach using constant-vus executor"
 echo "  - shared-iterations: Educational approach using shared-iterations executor"
 echo "  - advanced: Advanced approach with ramping patterns"
+echo ""
+echo -e "${BLUE}Available Test Profiles:${NC}"
+echo "  - smoke: Quick validation (1 VU, 1 iteration)"
+echo "  - functional: Business workflow validation (2 VUs, 5s)"
+echo "  - load: Expected production load (3 VUs, 10s)"
+echo "  - stress: Beyond expected load (4 VUs, 10s)"
+echo "  - spike: Sudden traffic spike (5 VUs, 3s)"
+echo "  - mix: Mixed user behavior (5 VUs, 5s) - default"
 echo ""
 echo -e "${BLUE}Available Distribution Profiles:${NC}"
 for profile in "${profiles[@]}"; do

@@ -5,13 +5,13 @@
 # Runs all tests in sequence: smoke -> functional -> distribution
 #
 # Usage:
-#   ./scripts/run-all-tests.sh [local|cloud] [profile]
+#   ./scripts/run-all-tests.sh [local|cloud] [test_profile]
 #   
 # Options:
 #   local  - Run locally and stream output to cloud
 #   cloud  - Run directly on k6 cloud infrastructure (default)
-#   profile - Test profile to use for functional tests (smoke, functional, load, stress, spike, mix)
-#            Defaults to 'functional'
+#   test_profile - Test profile to use for all tests (smoke, functional, load, stress, spike, mix)
+#                  Defaults to 'functional'
 #
 # Automatically discovers and runs all test files in:
 #   - tests/smoke/*.js
@@ -31,7 +31,7 @@ RUN_MODE=${1:-cloud}
 TEST_PROFILE=${2:-"functional"}
 
 echo "=========================================="
-echo "K6 Test Suite - Full Execution - Mode: $RUN_MODE - Profile: $TEST_PROFILE"
+echo "K6 Test Suite - Full Execution - Mode: $RUN_MODE - Test Profile: $TEST_PROFILE"
 echo "=========================================="
 echo ""
 echo "Note: Tests use configuration from src/config/test-profiles.js"
@@ -78,10 +78,11 @@ done
 
 echo ""
 echo "  Mix Scenario Tests: 1 (dynamic distribution profiles)"
-echo "    • run-distribution-tests.sh (auth_basic, ecommerce, high_conversion, browse_heavy, load_test)"
+echo "    • run-distribution-tests.sh (ecommerce distribution profile with $TEST_PROFILE test profile)"
 
 echo ""
 echo "Configuration: src/config/test-profiles.js"
+echo "Test Profile: $TEST_PROFILE (applied to all test types)"
 echo "=========================================="
 echo ""
 
@@ -90,7 +91,7 @@ START_TIME=$(date +%s)
 
 # Run smoke tests first
 echo "Step 1: Running Smoke Tests..."
-./scripts/run-smoke-tests.sh $RUN_MODE
+./scripts/run-smoke-tests.sh $RUN_MODE $TEST_PROFILE
 smoke_exit_code=$?
 
 echo ""
@@ -100,7 +101,7 @@ functional_exit_code=$?
 
 echo ""
 echo "Step 3: Running Mix Scenario Tests..."
-./scripts/run-distribution-tests.sh $RUN_MODE
+./scripts/run-distribution-tests.sh $RUN_MODE ecommerce $TEST_PROFILE
 distribution_exit_code=$?
 
 # Calculate duration

@@ -244,24 +244,28 @@ Using: Weighted Distribution (Recommended)
 # Local mode with functional profile
 ./scripts/run-all-tests.sh local
 
-# Cloud mode with specific functional test profile
+# Cloud mode with specific test profile (applied to all test types)
 ./scripts/run-all-tests.sh cloud load
 ./scripts/run-all-tests.sh cloud stress
 
-# Local mode with specific functional test profile
+# Local mode with specific test profile (applied to all test types)
 ./scripts/run-all-tests.sh local smoke
 ./scripts/run-all-tests.sh local spike
+
+# Cloud mode with mix test profile
+./scripts/run-all-tests.sh cloud mix
 ```
 
 **What it does:**
 
-- ✅ Runs smoke tests first
-- ✅ If smoke passes, runs functional tests
-- ✅ Then runs distribution tests
+- ✅ Runs smoke tests first (with specified test profile)
+- ✅ If smoke passes, runs functional tests (with specified test profile)
+- ✅ Then runs distribution tests (with ecommerce distribution profile and specified test profile)
 - ✅ **Cloud mode**: All tests run on k6 cloud infrastructure
 - ✅ **Local mode**: All tests run locally, stream to cloud, generate reports
 - ✅ Shows total duration
 - ✅ Comprehensive reporting
+- ✅ **Unified test profile**: Same test profile applied to all test types for consistent testing
 
 **Example output:**
 
@@ -668,33 +672,34 @@ rm -rf reports/*
 
 ### **Common Commands**
 
-| Task                                    | Command                                                                                                 |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Run smoke test (cloud)                  | `./scripts/run-smoke-tests.sh`                                                                          |
-| Run smoke test (local)                  | `./scripts/run-smoke-tests.sh local`                                                                    |
-| Run smoke test (specific profile)       | `./scripts/run-smoke-tests.sh cloud load`                                                               |
-| Run smoke test (quick)                  | `k6 run tests/smoke/smoke-test.js`                                                                      |
-| Run smoke test (specific profile)       | `TEST_PROFILE=stress k6 run tests/smoke/smoke-test.js`                                                  |
-| Run mix scenario tests (cloud)          | `./scripts/run-distribution-tests.sh`                                                                   |
-| Run mix scenario tests (local)          | `./scripts/run-distribution-tests.sh local`                                                             |
-| Run mix test (quick)                    | `k6 run tests/mix/mix-scenario-weighted.js`                                                             |
-| Run mix test (cloud)                    | `DISTRIBUTION_PROFILE=ecommerce k6 cloud tests/mix/mix-scenario-weighted.js`                            |
-| Run mix test (local)                    | `DISTRIBUTION_PROFILE=ecommerce k6 run -o cloud tests/mix/mix-scenario-weighted.js`                     |
-| Run mix test (specific test profile)    | `TEST_PROFILE=load DISTRIBUTION_PROFILE=ecommerce k6 cloud tests/mix/mix-scenario-weighted.js`          |
-| Run mix test (specific test profile)    | `TEST_PROFILE=stress DISTRIBUTION_PROFILE=ecommerce k6 run -o cloud tests/mix/mix-scenario-weighted.js` |
-| Run functional tests (cloud)            | `./scripts/run-functional-tests.sh`                                                                     |
-| Run functional tests (local)            | `./scripts/run-functional-tests.sh local`                                                               |
-| Run functional tests (specific profile) | `./scripts/run-functional-tests.sh cloud load`                                                          |
-| Run all tests (cloud)                   | `./scripts/run-all-tests.sh`                                                                            |
-| Run all tests (local)                   | `./scripts/run-all-tests.sh local`                                                                      |
-| Run all tests (specific profile)        | `./scripts/run-all-tests.sh cloud stress`                                                               |
-| Clean reports                           | `./scripts/clean-reports.sh`                                                                            |
-| Override VUs                            | `k6 run --vus 10 tests/smoke/smoke-test.js`                                                             |
-| Override duration                       | `k6 run --duration 30s tests/smoke/smoke-test.js`                                                       |
-| Run on UAT environment                  | `ENVIRONMENT=uat ./scripts/run-smoke-tests.sh cloud`                                                    |
-| Run on PROD environment                 | `ENVIRONMENT=prod ./scripts/run-smoke-tests.sh local`                                                   |
-| Custom BASE_URL                         | `BASE_URL=https://custom.url ./scripts/run-smoke-tests.sh`                                              |
-| Check exit code                         | `./scripts/run-smoke-tests.sh; echo $?`                                                                 |
+| Task                                           | Command                                                                                                 |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Run smoke test (cloud)                         | `./scripts/run-smoke-tests.sh`                                                                          |
+| Run smoke test (local)                         | `./scripts/run-smoke-tests.sh local`                                                                    |
+| Run smoke test (specific profile)              | `./scripts/run-smoke-tests.sh cloud load`                                                               |
+| Run smoke test (quick)                         | `k6 run tests/smoke/smoke-test.js`                                                                      |
+| Run smoke test (specific profile)              | `TEST_PROFILE=stress k6 run tests/smoke/smoke-test.js`                                                  |
+| Run mix scenario tests (cloud)                 | `./scripts/run-distribution-tests.sh`                                                                   |
+| Run mix scenario tests (local)                 | `./scripts/run-distribution-tests.sh local`                                                             |
+| Run mix scenario tests (specific test profile) | `./scripts/run-distribution-tests.sh cloud ecommerce load`                                              |
+| Run mix test (quick)                           | `k6 run tests/mix/mix-scenario-weighted.js`                                                             |
+| Run mix test (cloud)                           | `DISTRIBUTION_PROFILE=ecommerce k6 cloud tests/mix/mix-scenario-weighted.js`                            |
+| Run mix test (local)                           | `DISTRIBUTION_PROFILE=ecommerce k6 run -o cloud tests/mix/mix-scenario-weighted.js`                     |
+| Run mix test (specific test profile)           | `TEST_PROFILE=load DISTRIBUTION_PROFILE=ecommerce k6 cloud tests/mix/mix-scenario-weighted.js`          |
+| Run mix test (specific test profile)           | `TEST_PROFILE=stress DISTRIBUTION_PROFILE=ecommerce k6 run -o cloud tests/mix/mix-scenario-weighted.js` |
+| Run functional tests (cloud)                   | `./scripts/run-functional-tests.sh`                                                                     |
+| Run functional tests (local)                   | `./scripts/run-functional-tests.sh local`                                                               |
+| Run functional tests (specific profile)        | `./scripts/run-functional-tests.sh cloud load`                                                          |
+| Run all tests (cloud)                          | `./scripts/run-all-tests.sh`                                                                            |
+| Run all tests (local)                          | `./scripts/run-all-tests.sh local`                                                                      |
+| Run all tests (specific profile)               | `./scripts/run-all-tests.sh cloud stress`                                                               |
+| Clean reports                                  | `./scripts/clean-reports.sh`                                                                            |
+| Override VUs                                   | `k6 run --vus 10 tests/smoke/smoke-test.js`                                                             |
+| Override duration                              | `k6 run --duration 30s tests/smoke/smoke-test.js`                                                       |
+| Run on UAT environment                         | `ENVIRONMENT=uat ./scripts/run-smoke-tests.sh cloud`                                                    |
+| Run on PROD environment                        | `ENVIRONMENT=prod ./scripts/run-smoke-tests.sh local`                                                   |
+| Custom BASE_URL                                | `BASE_URL=https://custom.url ./scripts/run-smoke-tests.sh`                                              |
+| Check exit code                                | `./scripts/run-smoke-tests.sh; echo $?`                                                                 |
 
 ### **Project Structure**
 
