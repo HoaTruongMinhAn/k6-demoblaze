@@ -1,24 +1,24 @@
 pipeline {
     agent any
-
-    environment {
+    
+    environment{
         K6_CLOUD_TOKEN = credentials("k6-cloud-token")
         K6_CLOUD_PROJECT_ID = 5059314
-    }
+    }    
 
     stages {
-        stage('Checkout') {
-            steps {
+        stage('Checkout'){
+            steps{
                 git branch: 'master', url: 'https://github.com/HoaTruongMinhAn/k6-demoblaze.git'
-
             }
         }
-        stage('Run K6 Smoke Test') {
+        
+        stage('Run k6 Functional Tests') {
             steps {
                 script {
                     // Define test scripts
                     def tests = [
-                        [name: "smoke", path: "tests/smoke/smoke-test.js"]
+                        [name: "mix", path: "tests/mix/mix-scenario-weighted.js"]
                     ]
 
                     // Empty list to store report URLs
@@ -36,8 +36,8 @@ pipeline {
                         ).trim() == 'yes'
 
                         def cmd = dockerAvailable ?
-                            "${dockerCmd} run --rm -v \"${env.WORKSPACE}\":/work -w /work -e K6_CLOUD_TOKEN -e K6_CLOUD_PROJECT_ID grafana/k6:latest run ${test.path} -o cloud" :
-                            "/opt/homebrew/bin/k6 run ${test.path} -o cloud"
+                            "${dockerCmd} run --rm -v \"${env.WORKSPACE}\":/work -w /work -e K6_CLOUD_TOKEN -e K6_CLOUD_PROJECT_ID -e DISTRIBUTION_PROFILE=ecommerce -e TEST_PROFILE=mix grafana/k6:latest run ${test.path} -o cloud" :
+                            "DISTRIBUTION_PROFILE=ecommerce TEST_PROFILE=mix /opt/homebrew/bin/k6 run ${test.path} -o cloud"
 
                         def output = sh(
                             script: cmd,
@@ -76,7 +76,7 @@ pipeline {
         success {
             emailext(
                 from: 'Jenkins <anhoapitago1@gmail.com>',
-                to: 'anhoapitago@gmail.com, anhoapitago1@gmail.com,',
+                to: 'anhoapitago@gmail.com, anhoapitago1@gmail.com, ',
                 subject: "✅ SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """<p>✅ <b>Build succeeded!</b></p>
                          <p><b>Job:</b> ${env.JOB_NAME}</p>

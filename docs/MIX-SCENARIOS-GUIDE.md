@@ -1,292 +1,154 @@
-# Mix Scenarios Guide - K6 Expert Approaches
+# Mix Scenarios Guide (Concise)
 
-This guide explains how K6 experts set up mix scenarios with weighted distributions for realistic load testing.
+Use weighted scenarios to model realistic user behavior:
 
-## Overview
+- 20% signup only
+- 20% login only
+- 60% signup → login
 
-Mix scenarios simulate realistic user behavior patterns where different types of users perform different actions with different probabilities. This is essential for accurate load testing.
+## Recommended approach (weighted) — `tests/mix/mix-scenario-weighted.js`
 
-## Your Requirements
+Key idea: multiple `constant-vus` scenarios with explicit VU shares and `exec` functions for each flow.
 
-- **20%** users only sign up (new users who abandon)
-- **20%** users only login (returning users)
-- **60%** users sign up then login (new users completing flow)
+Why this:
 
-## Three K6 Expert Approaches
+- Simple and predictable
+- Clear distribution control
+- Works consistently across k6 versions
 
-### 1. Basic Scenario Approach (`mix-scenario.js`)
+## How to run
 
-**Best for**: Simple scenarios, learning K6 basics
+Scripts (recommended for CI/CD):
+
+```bash
+./scripts/run-distribution-tests.sh cloud
+./scripts/run-distribution-tests.sh local
+```
+
+Direct k6:
+
+```bash
+k6 run tests/mix/mix-scenario-weighted.js
+DISTRIBUTION_PROFILE=ecommerce k6 cloud tests/mix/mix-scenario-weighted.js
+```
+
+## Tips
+
+- Adjust VUs/duration via profiles in `src/config/test-profiles.js`
+- Use scenario-specific thresholds if certain flows must be faster
+- Prefer explicit weighting over shared-iterations for production
+
+---
+
+## Detailed example: Mix profile on ecommerce
+
+Command:
+
+```bash
+TEST_PROFILE=mix DISTRIBUTION_PROFILE=ecommerce k6 cloud tests/mix/mix-scenario-weighted.js
+```
+
+What this does:
+
+- Picks the test profile `mix` (VU/duration, thresholds) from `src/config/test-profiles.js`
+- Picks the distribution profile `ecommerce` with six scenarios and weights:
+  - signup_only (1)
+  - login_only (3)
+  - signup_and_login (4)
+  - view_cart (2)
+  - add_to_cart (3)
+  - place_order (2)
+- Executes on k6 Cloud (`k6 cloud`) and streams results using `K6_CLOUD_TOKEN`/`K6_CLOUD_PROJECT_ID`
+
+Example derived options (illustrative):
 
 ```javascript
+// from profiles, not exact values – check src/config/test-profiles.js
+const mixProfile = { vus: 20, duration: "60s" };
+
 export const options = {
+  thresholds: {
+    http_req_duration: ["p(95)<2000"],
+  },
   scenarios: {
     signup_only: {
       executor: "constant-vus",
-      vus: Math.ceil(mixProfile.vus * 0.2), // 20% of VUs
+      exec: "signupOnly",
+      vus: Math.ceil(mixProfile.vus * 0.2), // 20%
       duration: mixProfile.duration,
+      tags: { scenario: "signup_only" },
     },
     login_only: {
       executor: "constant-vus",
-      vus: Math.ceil(mixProfile.vus * 0.2), // 20% of VUs
+      exec: "loginOnly",
+      vus: Math.ceil(mixProfile.vus * 0.2), // 20%
       duration: mixProfile.duration,
+      tags: { scenario: "login_only" },
     },
-    signup_and_login: {
+    signup_then_login: {
       executor: "constant-vus",
-      vus: Math.ceil(mixProfile.vus * 0.6), // 60% of VUs
+      exec: "signupThenLogin",
+      vus: Math.ceil(mixProfile.vus * 0.6), // 60%
       duration: mixProfile.duration,
+      tags: { scenario: "signup_then_login" },
     },
   },
 };
 ```
 
-**Pros**: Simple, easy to understand
-**Cons**: Manual VU calculation, less flexible
+Expected behavior (example with mix profile `vus=10`, total weight 15):
 
-### 2. Weighted VUs Approach (`mix-scenario-weighted.js`) ⭐ **RECOMMENDED**
+- VU split across six flows by weight (approx.):
+  - signup_only ≈ 1/15 → 1 VU
+  - login_only ≈ 3/15 → 2 VUs
+  - signup_and_login ≈ 4/15 → 3 VUs
+  - view_cart ≈ 2/15 → 1 VU
+  - add_to_cart ≈ 3/15 → 2 VUs
+  - place_order ≈ 2/15 → 1 VU
+- Duration and thresholds come from the `mix` profile
+- Results visible in Grafana k6 Cloud; console shows a cloud URL
 
-**Best for**: Most production scenarios, K6 experts' preferred method
+Sample console (trimmed):
 
-```javascript
-export const options = {
-  scenarios: {
-    signup_only: {
-      executor: "constant-vus",
-      exec: "signupOnly",
-      vus: Math.ceil(mixProfile.vus * 0.2), // 20% of VUs
-      duration: mixProfile.duration,
-    },
-    // ... other scenarios
-  },
-};
+```text
+scenarios: (100.00%) 6 scenarios, 10 max VUs, 40s max duration (incl. graceful stop):
+  * add_to_cart: 2 looping VUs for 10s (exec: addToCart, gracefulStop: 30s)
+  * login_only: 2 looping VUs for 10s (exec: loginOnly, gracefulStop: 30s)
+  * place_order: 1 looping VUs for 10s (exec: placeOrder, gracefulStop: 30s)
+  * signup_and_login: 3 looping VUs for 10s (exec: signupAndLogin, gracefulStop: 30s)
+  * signup_only: 1 looping VUs for 10s (exec: signupOnly, gracefulStop: 30s)
+  * view_cart: 1 looping VUs for 10s (exec: viewCart, gracefulStop: 30s)
+
+INFO[0001] === Mix Scenario Test Setup (Dynamic Weighted) ===  source=console
+INFO[0001] Test Profile: mix                             source=console
+INFO[0001] Run Mode: cloud                               source=console
+INFO[0001] Distribution Profile: ecommerce               source=console
+INFO[0001] Total VUs: 10                                 source=console
+INFO[0001] Duration: 10s                                 source=console
+INFO[0001]                                               source=console
+INFO[0001] VU Distribution:                              source=console
+INFO[0001]   signup_only: 1 VUs (10.0%) - New users who abandon after signup  source=console
+INFO[0001]   login_only: 2 VUs (20.0%) - Returning users  source=console
+INFO[0001]   signup_and_login: 3 VUs (30.0%) - New users completing full flow  source=console
+INFO[0001]   view_cart: 1 VUs (10.0%) - Users viewing their cart  source=console
+INFO[0001]   add_to_cart: 2 VUs (20.0%) - Users adding items to cart  source=console
+INFO[0001]   place_order: 1 VUs (10.0%) - Users completing purchases  source=console
+INFO[0005] Added 4 products to cart                      source=console
+INFO[0005] Added 4 products to cart                      source=console
+INFO[0005] Added 5 products to cart                      source=console
+INFO[0008] Added 3 products to cart                      source=console
+INFO[0008] Added 3 products to cart                      source=console
+INFO[0009] Added 1 products to cart                      source=console
+INFO[0011] Added 2 products to cart                      source=console
+INFO[0012] Added 3 products to cart                      source=console
+INFO[0015] === Mix Scenario Test Complete ===            source=console
+
+running (13.9s), 00/10 VUs, 28 complete and 0 interrupted iterations
+add_to_cart      ✓ [======================================] 2 VUs  10s
+login_only       ✓ [======================================] 2 VUs  10s
+place_order      ✓ [======================================] 1 VUs  10s
+signup_and_login ✓ [======================================] 3 VUs  10s
+signup_only      ✓ [======================================] 1 VUs  10s
+view_cart        ✓ [======================================] 1 VUs  10s
+
 ```
-
-**Pros**:
-
-- Simple and reliable
-- Clear VU distribution
-- Easy to understand and debug
-- Works consistently across K6 versions
-- Perfect for mix scenarios
-
-**Cons**: Manual VU calculation (but this is actually clearer)
-
-### 3. Shared Iterations Approach (`mix-scenario-shared-iterations.js`)
-
-**Best for**: Educational purposes, understanding K6 internals
-
-```javascript
-export const options = {
-  scenarios: {
-    signup_only: {
-      executor: "shared-iterations",
-      exec: "signupOnly",
-      iterations: 1, // 1 iteration for signup only
-      maxDuration: mixProfile.duration,
-    },
-    // ... other scenarios
-  },
-  vus: mixProfile.vus, // VUs shared across all scenarios
-};
-```
-
-**Pros**:
-
-- VUs are shared across scenarios
-- More efficient resource utilization
-- Educational for understanding K6
-
-**Cons**:
-
-- More complex configuration
-- Can have timing issues
-- Less predictable execution
-- Not recommended for production mix scenarios
-
-### 4. Advanced Ramping Approach (`mix-scenario-advanced.js`)
-
-**Best for**: Production load testing, realistic traffic patterns
-
-```javascript
-export const options = {
-  scenarios: {
-    new_users_exploring: {
-      executor: "ramping-vus",
-      exec: "signupOnly",
-      startVUs: 0,
-      stages: [
-        { duration: "5s", target: Math.ceil(mixProfile.vus * 0.1) },
-        { duration: "10s", target: Math.ceil(mixProfile.vus * 0.2) },
-        { duration: "15s", target: Math.ceil(mixProfile.vus * 0.2) },
-      ],
-    },
-    // ... other scenarios with different patterns
-  },
-};
-```
-
-**Pros**:
-
-- Most realistic traffic patterns
-- Different ramp-up patterns per user type
-- Advanced threshold configuration
-- Production-ready
-
-**Cons**: Most complex to set up
-
-## Running the Tests
-
-### Using the Script
-
-```bash
-# Run all distribution profiles
-./scripts/run-distribution-tests.sh
-
-# Run specific profile
-./scripts/run-distribution-tests.sh ecommerce
-
-# Run with custom parameters
-VUS=20 DURATION=60s ./scripts/run-distribution-tests.sh
-
-# Run specific environment
-ENVIRONMENT=uat ./scripts/run-distribution-tests.sh
-```
-
-### Direct K6 Commands
-
-```bash
-# Basic approach
-k6 run tests/mix/mix-scenario.js
-
-# Weighted approach (recommended)
-k6 run tests/mix/mix-scenario-weighted.js
-
-# Advanced approach
-k6 run tests/mix/mix-scenario-advanced.js
-```
-
-## K6 Scenario Executors Explained
-
-### `constant-vus`
-
-- Maintains constant number of VUs
-- Good for steady-state testing
-- Simple to understand
-
-### `shared-iterations`
-
-- Distributes iterations across VUs
-- More realistic user behavior
-- Better resource utilization
-- **K6 experts' preferred for mix scenarios**
-
-### `ramping-vus`
-
-- Gradually increases VUs over time
-- Simulates realistic traffic patterns
-- Different stages for different behaviors
-- **Best for production load testing**
-
-## Advanced Features Used
-
-### 1. Scenario Tags
-
-```javascript
-tags: {
-  scenario: "signup_only",
-  user_type: "explorer"
-}
-```
-
-- Enables scenario-specific thresholds
-- Better monitoring and reporting
-- Easier debugging
-
-### 2. Advanced Thresholds
-
-```javascript
-thresholds: {
-  // Global thresholds
-  http_req_duration: ["p(95)<2000"],
-
-  // Scenario-specific thresholds
-  "http_req_duration{scenario:signup_only}": ["p(95)<1500"],
-  "http_req_duration{user_type:returning}": ["p(95)<1000"],
-}
-```
-
-### 3. Ramping Patterns
-
-```javascript
-stages: [
-  { duration: "5s", target: 2 }, // Ramp up
-  { duration: "10s", target: 5 }, // Peak load
-  { duration: "5s", target: 0 }, // Ramp down
-];
-```
-
-## Best Practices
-
-### 1. Start Simple
-
-- Begin with basic approach
-- Understand your traffic patterns
-- Gradually add complexity
-
-### 2. Use Realistic Data
-
-- Different user types need different data
-- Use existing users for login scenarios
-- Generate new users for signup scenarios
-
-### 3. Monitor Scenario Distribution
-
-```javascript
-export function setup() {
-  console.log(`Signup Only: ${Math.ceil(mixProfile.vus * 0.2)} (20%)`);
-  console.log(`Login Only: ${Math.ceil(mixProfile.vus * 0.2)} (20%)`);
-  console.log(`Signup + Login: ${Math.ceil(mixProfile.vus * 0.6)} (60%)`);
-}
-```
-
-### 4. Set Appropriate Thresholds
-
-- Different scenarios may have different performance expectations
-- Login-only should be faster than signup+login
-- Use scenario-specific thresholds
-
-### 5. Test Different Load Patterns
-
-- Ramp-up patterns
-- Steady-state patterns
-- Spike patterns
-- Gradual ramp-down
-
-## Monitoring and Analysis
-
-### Key Metrics to Watch
-
-- **Response times by scenario**: Are different user flows performing differently?
-- **Error rates by scenario**: Which user flows are failing?
-- **Throughput by scenario**: How many users of each type are being processed?
-
-### K6 Output Analysis
-
-```bash
-# Generate detailed report
-k6 run --out json=results.json tests/mix/mix-scenario-weighted.js
-
-# View scenario breakdown
-k6 run --out csv=results.csv tests/mix/mix-scenario-weighted.js
-```
-
-## Recommended Approach
-
-For most production scenarios, K6 experts recommend:
-
-1. **Start with weighted iterations** (`mix-scenario-weighted.js`)
-2. **Add ramping patterns** for realistic traffic simulation
-3. **Use scenario-specific thresholds** for better monitoring
-4. **Monitor scenario distribution** to ensure correct weighting
-
-This approach provides the best balance of realism, maintainability, and performance insights.
