@@ -129,8 +129,8 @@ export const TEST_PROFILES = {
     get projectId() {
       return getProjectId();
     },
-    vus: 10,
-    duration: "10s",
+    vus: 20,
+    duration: "20s",
     thresholds: {
       http_req_duration: ["p(95)<2000", "p(99)<3000"], // Balanced performance expectations
       http_req_failed: ["rate<0.05"], // Up to 5% errors acceptable
