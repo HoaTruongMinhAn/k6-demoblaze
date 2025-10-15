@@ -1,6 +1,57 @@
 # Running Tests Guide
 
-Complete guide on how to run k6 tests in this project.
+Complete guide on how to run k6 tests in this project, including Jenkins pipeline integration.
+
+## 🚀 **Jenkins Pipeline Integration**
+
+This project is designed to work seamlessly with Jenkins CI/CD pipelines. The test execution follows a sequential pipeline structure:
+
+### **Pipeline Execution Sequence**
+
+```
+01 - product SIT (if success)
+    ↓
+02 - smoke performance test (if success)
+    ↓
+03 - functional performance test (if success)
+    ↓
+04 - mix performance test
+```
+
+### **Jenkins Pipeline Stages**
+
+| Stage  | Test Type              | Purpose                    | Command                                                    |
+| ------ | ---------------------- | -------------------------- | ---------------------------------------------------------- |
+| **01** | Product SIT            | System Integration Testing | `./scripts/run-smoke-tests.sh cloud`                       |
+| **02** | Smoke Performance      | Critical path validation   | `./scripts/run-smoke-tests.sh cloud load`                  |
+| **03** | Functional Performance | Business workflow testing  | `./scripts/run-functional-tests.sh cloud load`             |
+| **04** | Mix Performance        | Realistic user behavior    | `./scripts/run-distribution-tests.sh cloud ecommerce load` |
+
+### **Pipeline Configuration**
+
+Each stage uses **cloud mode** for optimal performance and centralized reporting:
+
+```bash
+# Stage 01: Product SIT (Basic validation)
+./scripts/run-smoke-tests.sh cloud
+
+# Stage 02: Smoke Performance (Load testing)
+./scripts/run-smoke-tests.sh cloud load
+
+# Stage 03: Functional Performance (Business workflows)
+./scripts/run-functional-tests.sh cloud load
+
+# Stage 04: Mix Performance (Realistic scenarios)
+./scripts/run-distribution-tests.sh cloud ecommerce load
+```
+
+### **Pipeline Benefits**
+
+- ✅ **Sequential Execution**: Each stage runs only if previous stage succeeds
+- ✅ **Cloud Infrastructure**: All tests run on k6 cloud for consistent performance
+- ✅ **Centralized Reporting**: All results available in k6 cloud dashboard
+- ✅ **Fail-Fast**: Pipeline stops on first failure, saving time and resources
+- ✅ **Scalable**: Easy to add more stages or modify existing ones
 
 ---
 
@@ -57,12 +108,12 @@ k6 run tests/mix/mix-scenario-weighted.js
 ### **Run Smoke Tests**
 
 ```bash
+# Local mode - runs locally and streams to cloud with smoke profile
+./scripts/run-smoke-tests.sh local
+
 # Cloud mode (default) - runs on k6 cloud infrastructure with smoke profile
 ./scripts/run-smoke-tests.sh
 ./scripts/run-smoke-tests.sh cloud
-
-# Local mode - runs locally and streams to cloud with smoke profile
-./scripts/run-smoke-tests.sh local
 
 # Cloud mode with specific test profile
 ./scripts/run-smoke-tests.sh cloud load
@@ -139,11 +190,14 @@ Running Smoke Tests
 **Direct k6 execution (mix-scenario-weighted.js):**
 
 ```bash
-# Cloud mode (default) with mix profile
-DISTRIBUTION_PROFILE=ecommerce k6 cloud tests/mix/mix-scenario-weighted.js
+# Local mode entirely
+DISTRIBUTION_PROFILE=ecommerce k6 run tests/mix/mix-scenario-weighted.js
 
 # Local mode with mix profile
 DISTRIBUTION_PROFILE=ecommerce k6 run -o cloud tests/mix/mix-scenario-weighted.js
+
+# Cloud mode (default) with mix profile
+DISTRIBUTION_PROFILE=ecommerce k6 cloud tests/mix/mix-scenario-weighted.js
 
 # Cloud mode with specific test profile
 TEST_PROFILE=load DISTRIBUTION_PROFILE=ecommerce k6 cloud tests/mix/mix-scenario-weighted.js
@@ -234,14 +288,14 @@ Using: Weighted Distribution (Recommended)
 60% Signup + Login (new users completing flow)
 ```
 
-### **Run All Tests**
+### **Run All Tests (Jenkins Pipeline Simulation)**
 
 ```bash
-# Cloud mode (default) with functional profile
+# Cloud mode (default) - simulates Jenkins pipeline sequence
 ./scripts/run-all-tests.sh
 ./scripts/run-all-tests.sh cloud
 
-# Local mode with functional profile
+# Local mode - runs locally with cloud streaming
 ./scripts/run-all-tests.sh local
 
 # Cloud mode with specific test profile (applied to all test types)
@@ -256,38 +310,43 @@ Using: Weighted Distribution (Recommended)
 ./scripts/run-all-tests.sh cloud mix
 ```
 
-**What it does:**
+**What it does (Jenkins Pipeline Sequence):**
 
-- ✅ Runs smoke tests first (with specified test profile)
-- ✅ If smoke passes, runs functional tests (with specified test profile)
-- ✅ Then runs distribution tests (with ecommerce distribution profile and specified test profile)
-- ✅ **Cloud mode**: All tests run on k6 cloud infrastructure
+- ✅ **Stage 01**: Runs smoke tests (Product SIT validation)
+- ✅ **Stage 02**: If smoke passes, runs smoke tests with load profile (Smoke Performance)
+- ✅ **Stage 03**: If stage 02 passes, runs functional tests with load profile (Functional Performance)
+- ✅ **Stage 04**: If stage 03 passes, runs distribution tests with ecommerce profile (Mix Performance)
+- ✅ **Cloud mode**: All tests run on k6 cloud infrastructure (Jenkins default)
 - ✅ **Local mode**: All tests run locally, stream to cloud, generate reports
-- ✅ Shows total duration
-- ✅ Comprehensive reporting
-- ✅ **Unified test profile**: Same test profile applied to all test types for consistent testing
+- ✅ Shows total duration and stage-by-stage progress
+- ✅ Comprehensive reporting with stage results
+- ✅ **Fail-Fast**: Stops on first stage failure (matches Jenkins behavior)
 
-**Example output:**
+**Example output (Jenkins Pipeline Simulation):**
 
 ```
 ==========================================
-K6 Test Suite - Full Execution - Mode: cloud
+K6 Test Suite - Jenkins Pipeline Simulation - Mode: cloud
 ==========================================
 
-Step 1: Running Smoke Tests...
-✅ Smoke tests passed
+Stage 01: Product SIT (Basic Validation)...
+✅ Product SIT tests passed
 
-Step 2: Running Functional Tests...
-✅ Functional tests passed
+Stage 02: Smoke Performance (Load Testing)...
+✅ Smoke performance tests passed
 
-Step 3: Running Mix Scenario Tests...
-✅ Distribution tests passed
+Stage 03: Functional Performance (Business Workflows)...
+✅ Functional performance tests passed
+
+Stage 04: Mix Performance (Realistic Scenarios)...
+✅ Mix performance tests passed
 
 ==========================================
-✅ All Tests Completed Successfully
+✅ All Pipeline Stages Completed Successfully
 ==========================================
-Total Duration: 45s
-Reports saved in: ./reports/
+Total Duration: 2m 15s
+Pipeline Status: PASSED
+Reports available in k6 cloud dashboard
 ==========================================
 ```
 
@@ -298,6 +357,76 @@ Reports saved in: ./reports/
 ```
 
 Removes all generated test reports.
+
+---
+
+## 🔧 **Jenkins Pipeline Configuration**
+
+### **Jenkinsfile Example**
+
+```groovy
+pipeline {
+    agent any
+
+    stages {
+        stage('01 - Product SIT') {
+            steps {
+                sh './scripts/run-smoke-tests.sh cloud'
+            }
+        }
+
+        stage('02 - Smoke Performance Test') {
+            steps {
+                sh './scripts/run-smoke-tests.sh cloud load'
+            }
+        }
+
+        stage('03 - Functional Performance Test') {
+            steps {
+                sh './scripts/run-functional-tests.sh cloud load'
+            }
+        }
+
+        stage('04 - Mix Performance Test') {
+            steps {
+                sh './scripts/run-distribution-tests.sh cloud ecommerce load'
+            }
+        }
+    }
+
+    post {
+        always {
+            // Archive test results
+            archiveArtifacts artifacts: 'reports/*.json', allowEmptyArchive: true
+        }
+        success {
+            echo 'All pipeline stages completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed at one of the stages.'
+        }
+    }
+}
+```
+
+### **Jenkins Pipeline Benefits**
+
+- ✅ **Sequential Execution**: Each stage runs only if previous succeeds
+- ✅ **Cloud Infrastructure**: Consistent test environment across all stages
+- ✅ **Centralized Reporting**: All results in k6 cloud dashboard
+- ✅ **Fail-Fast Strategy**: Stops on first failure to save resources
+- ✅ **Artifact Archiving**: Test reports saved for analysis
+- ✅ **Status Notifications**: Clear success/failure indicators
+
+### **Environment Variables for Jenkins**
+
+```bash
+# Set in Jenkins environment or .env file
+export ENVIRONMENT=sit          # or uat, prod
+export K6_CLOUD_TOKEN=your_token
+export VUS=10                   # Override default VUs
+export DURATION=60s             # Override default duration
+```
 
 ---
 
@@ -672,6 +801,18 @@ rm -rf reports/*
 
 ### **Common Commands**
 
+#### **Jenkins Pipeline Commands**
+
+| Task                                 | Command                                                    |
+| ------------------------------------ | ---------------------------------------------------------- |
+| Stage 01: Product SIT                | `./scripts/run-smoke-tests.sh cloud`                       |
+| Stage 02: Smoke Performance          | `./scripts/run-smoke-tests.sh cloud load`                  |
+| Stage 03: Functional Performance     | `./scripts/run-functional-tests.sh cloud load`             |
+| Stage 04: Mix Performance            | `./scripts/run-distribution-tests.sh cloud ecommerce load` |
+| Run all pipeline stages (simulation) | `./scripts/run-all-tests.sh cloud`                         |
+
+#### **Development & Testing Commands**
+
 | Task                                           | Command                                                                                                 |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Run smoke test (cloud)                         | `./scripts/run-smoke-tests.sh`                                                                          |
@@ -892,9 +1033,23 @@ cat src/config/test-profiles.js
 
 ## 🎯 **Summary**
 
-### **Two Ways to Run Tests**
+### **Three Ways to Run Tests**
 
-1. **Shell Scripts** (Automation)
+1. **Jenkins Pipeline** (Production CI/CD)
+
+   ```bash
+   # Sequential pipeline execution (matches Jenkins stages)
+   Stage 01: ./scripts/run-smoke-tests.sh cloud
+   Stage 02: ./scripts/run-smoke-tests.sh cloud load
+   Stage 03: ./scripts/run-functional-tests.sh cloud load
+   Stage 04: ./scripts/run-distribution-tests.sh cloud ecommerce load
+   ```
+
+   - Best for: Production CI/CD, Jenkins integration, Sequential validation
+   - **Cloud mode**: All stages run on k6 cloud infrastructure
+   - **Fail-fast**: Stops on first stage failure
+
+2. **Shell Scripts** (Automation)
 
    ```bash
    # Cloud mode (default) - runs on k6 cloud infrastructure
@@ -906,11 +1061,11 @@ cat src/config/test-profiles.js
    ./scripts/run-distribution-tests.sh local
    ```
 
-   - Best for: CI/CD, Production, Consistent reporting
+   - Best for: Local automation, Testing, Consistent reporting
    - **Cloud mode**: Direct execution on k6 cloud infrastructure
    - **Local mode**: Local execution with cloud streaming and local reports
 
-2. **Direct K6** (Quick Testing)
+3. **Direct K6** (Quick Testing)
    ```bash
    k6 run tests/smoke/smoke-test.js
    k6 run tests/mix/mix-scenario-weighted.js
@@ -919,13 +1074,14 @@ cat src/config/test-profiles.js
 
 ### **Key Points**
 
+✅ **Jenkins Pipeline**: Sequential execution matching your Jenkins stages  
 ✅ Shell scripts (`.sh`) are wrappers that run k6 internally  
 ✅ K6 test files (`.js`) contain the actual test logic  
-✅ Use `./scripts/` for automation, `k6 run` for development  
+✅ Use Jenkins pipeline for production, `./scripts/` for automation, `k6 run` for development  
 ✅ **Cloud mode** (default): Runs directly on k6 cloud infrastructure  
 ✅ **Local mode**: Runs locally, streams to cloud, generates local reports  
 ✅ Reports are generated automatically by shell scripts in local mode  
-✅ Both methods return proper exit codes for CI/CD  
+✅ All methods return proper exit codes for CI/CD  
 ✅ Project ID is managed centrally in `config-manager.js`
 
 ---
