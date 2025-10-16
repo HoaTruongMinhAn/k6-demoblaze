@@ -4,15 +4,15 @@
         "customer": [
             {
                 "username": "tangoC",
-                "password": "123456"
+                "password": "MTIzNDU2"
             },
             {
                 "username": "tangoD",
-                "password": "123456"
+                "password": "MTIzNDU2"
             },
             {
                 "username": "tangoE",
-                "password": "123456"
+                "password": "MTIzNDU2"
             }
         ],
         "admin": [

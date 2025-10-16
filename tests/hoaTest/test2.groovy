@@ -35,7 +35,33 @@ pipeline {
                             returnStdout: true
                         ).trim() == 'yes'
 
-                        def cmd = dockerAvailable ?
+                        // Ensure Docker daemon is running; try to start if not
+                        def dockerDaemon = false
+                        if (dockerAvailable) {
+                            dockerDaemon = sh(
+                                script: "${dockerCmd} info >/dev/null 2>&1 && echo yes || echo no",
+                                returnStdout: true
+                            ).trim() == 'yes'
+
+                            if (!dockerDaemon) {
+                                def isDarwin = sh(script: 'uname -s', returnStdout: true).trim() == 'Darwin'
+                                if (isDarwin) {
+                                    // Try to start Docker Desktop (may require GUI session)
+                                    sh 'open -g -a Docker || true'
+                                } else {
+                                    // Try common Linux service managers
+                                    sh 'systemctl --user start docker 2>/dev/null || sudo systemctl start docker 2>/dev/null || sudo service docker start 2>/dev/null || true'
+                                }
+                                // Wait up to ~120s for daemon to become ready
+                                sh 'i=0; until docker info >/dev/null 2>&1 || [ $i -ge 60 ]; do sleep 2; i=$((i+1)); done'
+                                dockerDaemon = sh(
+                                    script: "${dockerCmd} info >/dev/null 2>&1 && echo yes || echo no",
+                                    returnStdout: true
+                                ).trim() == 'yes'
+                            }
+                        }
+
+                        def cmd = (dockerAvailable && dockerDaemon) ?
                             "${dockerCmd} run --rm -v \"${env.WORKSPACE}\":/work -w /work -e K6_CLOUD_TOKEN -e K6_CLOUD_PROJECT_ID -e DISTRIBUTION_PROFILE=ecommerce -e TEST_PROFILE=mix grafana/k6:latest run ${test.path} -o cloud" :
                             "DISTRIBUTION_PROFILE=ecommerce TEST_PROFILE=mix /opt/homebrew/bin/k6 run ${test.path} -o cloud"
 
