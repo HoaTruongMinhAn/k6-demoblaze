@@ -53,8 +53,11 @@ export const TEST_PROFILES = {
     get projectId() {
       return getProjectId();
     },
-    vus: 2,
-    duration: "5s",
+    stages: [
+      { duration: "3s", target: 2 },
+      { duration: "5s", target: 2 },
+      { duration: "3s", target: 0 },
+    ],
     thresholds: {
       http_req_duration: ["p(95)<1000", "p(99)<1200", "max<2000"], // Stricter for functional tests
       http_req_failed: ["rate<0.01"], // Less than 1% errors
@@ -72,8 +75,11 @@ export const TEST_PROFILES = {
     get projectId() {
       return getProjectId();
     },
-    vus: 3,
-    duration: "10s",
+    stages: [
+      { duration: "5s", target: 3 },
+      { duration: "10s", target: 3 },
+      { duration: "5s", target: 0 },
+    ],
     thresholds: {
       http_req_duration: ["p(95)<2000", "p(99)<3000"], // More lenient under load
       http_req_failed: ["rate<0.05"], // Up to 5% errors acceptable
@@ -91,8 +97,11 @@ export const TEST_PROFILES = {
     get projectId() {
       return getProjectId();
     },
-    vus: 4,
-    duration: "10s",
+    stages: [
+      { duration: "5s", target: 5 },
+      { duration: "10s", target: 5 },
+      { duration: "5s", target: 0 },
+    ],
     thresholds: {
       http_req_duration: ["p(95)<5000"], // Very lenient - finding limits
       http_req_failed: ["rate<0.10"], // Up to 10% errors expected
@@ -110,8 +119,10 @@ export const TEST_PROFILES = {
     get projectId() {
       return getProjectId();
     },
-    vus: 5,
-    duration: "3s",
+    stages: [
+      { duration: "5s", target: 50 },
+      { duration: "2s", target: 0 },
+    ],
     thresholds: {
       http_req_duration: ["p(95)<3000"], // Allow for spike impact
       http_req_failed: ["rate<0.10"], // Some failures expected during spike

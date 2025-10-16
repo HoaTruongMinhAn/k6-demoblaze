@@ -43,8 +43,7 @@ const testProfile = getTestProfile(testProfileName);
 const runMode = __ENV.RUN_MODE || "cloud";
 
 export const options = {
-  vus: testProfile.vus,
-  duration: testProfile.duration,
+  stages: testProfile.stages,
   thresholds: testProfile.thresholds,
   cloud: {
     projectID: testProfile.cloud.projectID,
