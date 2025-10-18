@@ -1,17 +1,5 @@
-import { configManager } from "../../../src/config/config-manager.js";
-import {
-  signUpAndValidate,
-  loginAndValidate,
-} from "../../../src/api/auth-api.js";
 import { getTestProfile } from "../../../src/config/test-profiles.js";
-import {
-  preActionDelay,
-  betweenActionDelay,
-} from "../../../src/utils/timing.js";
-import {
-  addRandomProductsToCartAndValidate,
-  getToken,
-} from "../../../src/api/product-api.js";
+import { addItemsWorkflow } from "../../../src/workflows/cart-workflows.js";
 
 /**
  * Functional Test: Add Items to Cart
@@ -64,15 +52,5 @@ export const options = {
 };
 
 export default function () {
-  preActionDelay();
-  const user = configManager.generateUserInfo("customer");
-  signUpAndValidate(user);
-
-  const loginResponse = loginAndValidate(user);
-  const token = getToken(loginResponse);
-
-  const cartResult = addRandomProductsToCartAndValidate(token);
-  console.log(`Added ${cartResult.totalProducts} products to cart`);
-
-  betweenActionDelay();
+  addItemsWorkflow();
 }

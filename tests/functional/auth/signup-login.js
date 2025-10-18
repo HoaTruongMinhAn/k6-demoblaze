@@ -1,10 +1,5 @@
-import { configManager } from "../../../src/config/config-manager.js";
-import { signUpAndLoginWithValidation } from "../../../src/api/auth-api.js";
 import { getTestProfile } from "../../../src/config/test-profiles.js";
-import {
-  preActionDelay,
-  betweenActionDelay,
-} from "../../../src/utils/timing.js";
+import { signupAndLoginWorkflow } from "../../../src/workflows/auth-workflows.js";
 
 /**
  * Functional Test: User Sign Up and Login
@@ -57,8 +52,5 @@ export const options = {
 };
 
 export default function () {
-  preActionDelay();
-  const user = configManager.generateUserInfo("customer");
-  signUpAndLoginWithValidation(user);
-  betweenActionDelay();
+  signupAndLoginWorkflow();
 }

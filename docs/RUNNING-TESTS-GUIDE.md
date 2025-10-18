@@ -62,7 +62,7 @@ k6 run -o cloud tests/smoke/smoke-test.js
 
 # Mix (weighted, with profile)
 DISTRIBUTION_PROFILE=ecommerce k6 run tests/mix/mix-scenario-weighted.js
-TEST_PROFILE=load DISTRIBUTION_PROFILE=ecommerce k6 cloud tests/mix/mix-scenario-weighted.js
+TEST_PROFILE=mix DISTRIBUTION_PROFILE=high_conversion k6 cloud tests/mix/mix-scenario-weighted.js
 ```
 
 Tip: See `docs/TEST-PROFILES-GUIDE.md` for profiles and thresholds.

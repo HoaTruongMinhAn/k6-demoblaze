@@ -1,24 +1,19 @@
-import { configManager } from "../../src/config/config-manager.js";
-import {
-  signUpAndValidate,
-  loginAndValidate,
-  signUpAndLoginWithValidation,
-} from "../../src/api/auth-api.js";
-import {
-  addRandomProductsToCartAndValidate,
-  viewCart as viewCartAPI,
-  validateCartHasProducts,
-  validateCartEmpty,
-  getToken,
-} from "../../src/api/product-api.js";
 import {
   getTestProfile,
   getDistributionProfile,
   generateScenariosConfig,
   calculateVUDistribution,
 } from "../../src/config/test-profiles.js";
-import { getExistingUser } from "../../src/utils/test-data.js";
-import { preActionDelay, betweenActionDelay } from "../../src/utils/timing.js";
+import {
+  signupWorkflow,
+  loginWorkflow,
+  signupAndLoginWorkflow,
+} from "../../src/workflows/auth-workflows.js";
+import {
+  addItemsWorkflow,
+  viewCartWorkflow,
+  placeOrderWorkflow,
+} from "../../src/workflows/cart-workflows.js";
 
 /**
  * Mix Scenario Test - Dynamic Weighted Distribution Approach
@@ -78,30 +73,21 @@ export const options = generateScenariosConfig(
  * Signup only scenario - New users who abandon after signup
  */
 export function signupOnly() {
-  preActionDelay();
-  const user = configManager.generateUserInfo("customer");
-  signUpAndValidate(user);
-  betweenActionDelay();
+  signupWorkflow();
 }
 
 /**
  * Login only scenario - Returning users
  */
 export function loginOnly() {
-  preActionDelay();
-  const user = getExistingUser("customer");
-  loginAndValidate(user);
-  betweenActionDelay();
+  loginWorkflow();
 }
 
 /**
  * Signup and login scenario - New users completing full flow
  */
 export function signupAndLogin() {
-  preActionDelay();
-  const user = configManager.generateUserInfo("customer");
-  signUpAndLoginWithValidation(user);
-  betweenActionDelay();
+  signupAndLoginWorkflow();
 }
 
 /**
@@ -109,17 +95,7 @@ export function signupAndLogin() {
  * Implements the addItems.js functionality
  */
 export function addToCart() {
-  preActionDelay();
-  const user = configManager.generateUserInfo("customer");
-  signUpAndValidate(user);
-
-  const loginResponse = loginAndValidate(user);
-  const token = getToken(loginResponse);
-
-  const cartResult = addRandomProductsToCartAndValidate(token);
-  console.log(`Added ${cartResult.totalProducts} products to cart`);
-
-  betweenActionDelay();
+  addItemsWorkflow();
 }
 
 /**
@@ -127,24 +103,7 @@ export function addToCart() {
  * Implements the addItems-viewCart.js functionality (full cart flow)
  */
 export function placeOrder() {
-  preActionDelay();
-  const user = configManager.generateUserInfo("customer");
-  signUpAndValidate(user);
-
-  const loginResponse = loginAndValidate(user);
-  const token = getToken(loginResponse);
-
-  // Check empty cart first
-  validateCartEmpty(token);
-
-  // Add items to cart
-  const cartResult = addRandomProductsToCartAndValidate(token);
-  console.log(`Added ${cartResult.totalProducts} products to cart`);
-
-  // Verify cart has products
-  validateCartHasProducts(token);
-
-  betweenActionDelay();
+  placeOrderWorkflow();
 }
 
 /**
@@ -152,17 +111,7 @@ export function placeOrder() {
  * Implements the viewCart.js functionality
  */
 export function viewCart() {
-  preActionDelay();
-  const user = configManager.generateUserInfo("customer");
-  signUpAndValidate(user);
-
-  const loginResponse = loginAndValidate(user);
-  const token = getToken(loginResponse);
-
-  // Check that cart is empty
-  validateCartEmpty(token);
-
-  betweenActionDelay();
+  viewCartWorkflow();
 }
 
 /**

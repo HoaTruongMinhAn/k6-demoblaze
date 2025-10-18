@@ -1,10 +1,5 @@
-import { loginAndValidate } from "../../../src/api/auth-api.js";
 import { getTestProfile } from "../../../src/config/test-profiles.js";
-import { getExistingUser } from "../../../src/utils/test-data.js";
-import {
-  preActionDelay,
-  betweenActionDelay,
-} from "../../../src/utils/timing.js";
+import { loginWorkflow } from "../../../src/workflows/auth-workflows.js";
 
 /**
  * Functional Test: User Login
@@ -55,8 +50,5 @@ export const options = {
 };
 
 export default function () {
-  preActionDelay();
-  const user = getExistingUser("customer");
-  loginAndValidate(user);
-  betweenActionDelay();
+  loginWorkflow();
 }
