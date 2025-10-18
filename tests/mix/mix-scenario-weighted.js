@@ -50,7 +50,7 @@ import {
 // Get test profile from environment variable or default to mix
 const testProfileName = __ENV.TEST_PROFILE || "mix";
 const testProfile = getTestProfile(testProfileName);
-const distributionProfileName = __ENV.DISTRIBUTION_PROFILE || "auth_basic";
+const distributionProfileName = __ENV.DISTRIBUTION_PROFILE || "high_conversion";
 const distributionProfile = getDistributionProfile(distributionProfileName);
 
 // Get run mode (local|cloud) - defaults to cloud for direct k6 cloud execution

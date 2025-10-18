@@ -54,14 +54,16 @@ export const TEST_PROFILES = {
       return getProjectId();
     },
     stages: [
-      { duration: "3s", target: 2 },
-      { duration: "5s", target: 2 },
-      { duration: "3s", target: 0 },
+      { duration: "10s", target: 10 },
+      { duration: "40s", target: 10 },
+      { duration: "10s", target: 0 },
     ],
     thresholds: {
       http_req_duration: ["p(95)<3000", "p(99)<3500", "max<4000"], // Stricter for functional tests
       http_req_failed: ["rate<0.01"], // Less than 1% errors
       checks: ["rate>0.95"], // More than 95% checks pass
+      my_counter: ["count>1"],
+      new_response_time: ["p(95)<3000", "p(99)<3500", "max<4000"],
     },
     get cloud() {
       return {

@@ -6,6 +6,7 @@ import {
 } from "../api/auth-api.js";
 import { getExistingUser } from "../utils/test-data.js";
 import { preActionDelay, betweenActionDelay } from "../utils/timing.js";
+import { Counter, Trend } from "k6/metrics";
 
 /**
  * Authentication Workflows
@@ -30,10 +31,16 @@ export function signupWorkflow() {
  * @returns {Object} Login response with user info
  */
 export function loginWorkflow() {
+  // let myCounter = new Counter("my_counter");
+  // let newResponseTime = new Trend("new_response_time");
+
   preActionDelay();
   const user = getExistingUser("customer");
   const loginResponse = loginAndValidate(user);
   betweenActionDelay();
+
+  // myCounter.add(1);
+  // newResponseTime.add(loginResponse.response.timings.duration);
   return { user, loginResponse };
 }
 

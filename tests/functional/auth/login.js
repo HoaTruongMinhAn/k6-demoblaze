@@ -1,5 +1,6 @@
 import { getTestProfile } from "../../../src/config/test-profiles.js";
 import { loginWorkflow } from "../../../src/workflows/auth-workflows.js";
+import { Counter, Trend } from "k6/metrics";
 
 /**
  * Functional Test: User Login
@@ -11,6 +12,15 @@ import { loginWorkflow } from "../../../src/workflows/auth-workflows.js";
  * - Available profiles: smoke, functional, load, stress, spike, mix
  * - Run mode can be set via RUN_MODE environment variable (local|cloud)
  * - Defaults to 'cloud' mode for direct k6 cloud execution
+ *
+ * Custom Metrics:
+ * - my_counter: Counts number of login requests
+ * - new_response_time: Tracks login-specific response times
+ *
+ * Viewing Trends:
+ * - All metrics automatically tracked in k6 Cloud
+ * - Access via: https://app.k6.io → Your Project → Trends tab
+ * - View 30-day historical trends for all metrics
  *
  * Test Steps:
  * 1. Get existing user credentials
@@ -28,6 +38,8 @@ import { loginWorkflow } from "../../../src/workflows/auth-workflows.js";
  * # Via run-functional-tests.sh (recommended)
  * ./scripts/run-functional-tests.sh cloud
  * ./scripts/run-functional-tests.sh local
+ *
+ * Note: View trends at https://app.k6.io → Trends tab (see docs/K6-CLOUD-TRENDS-GUIDE.md)
  */
 
 // Get test profile from environment variable or default to functional
@@ -36,6 +48,10 @@ const testProfile = getTestProfile(testProfileName);
 
 // Get run mode (local|cloud) - defaults to cloud for direct k6 cloud execution
 const runMode = __ENV.RUN_MODE || "cloud";
+
+// Custom metrics for tracking
+let myCounter = new Counter("my_counter");
+let newResponseTime = new Trend("new_response_time");
 
 export const options = {
   stages: testProfile.stages,
@@ -50,5 +66,7 @@ export const options = {
 };
 
 export default function () {
-  loginWorkflow();
+  const { loginResponse } = loginWorkflow();
+  myCounter.add(1);
+  newResponseTime.add(loginResponse.response.timings.duration);
 }
