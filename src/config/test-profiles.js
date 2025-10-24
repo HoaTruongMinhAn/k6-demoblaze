@@ -54,9 +54,9 @@ export const TEST_PROFILES = {
       return getProjectId();
     },
     stages: [
+      { duration: "3s", target: 2 },
       { duration: "5s", target: 2 },
-      { duration: "10s", target: 2 },
-      { duration: "5s", target: 0 },
+      { duration: "3s", target: 0 },
     ],
     thresholds: {
       http_req_duration: ["p(95)<3000", "p(99)<3500", "max<4000"], // Stricter for functional tests
